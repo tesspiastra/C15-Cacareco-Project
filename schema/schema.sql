@@ -31,7 +31,6 @@ CREATE TABLE plant (
     plant_name VARCHAR(30) NOT NULL,
     plant_scientific_name VARCHAR(100),
     origin_location_id INT NOT NULL,
-    last_watered DATETIME,
     image_link VARCHAR(250),
     FOREIGN KEY (origin_location_id) REFERENCES origin_location(origin_location_id)
 );
@@ -50,6 +49,7 @@ CREATE TABLE plant_status (
     recording_taken DATETIME NOT NULL,
     soil_moisture FLOAT,
     temperature FLOAT,
+    last_watered DATETIME,
     FOREIGN KEY (botanist_id) REFERENCES botanist(botanist_id),
     FOREIGN KEY (plant_id) REFERENCES plant(plant_id)
 );
