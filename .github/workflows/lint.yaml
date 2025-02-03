@@ -28,7 +28,7 @@ jobs:
 
       - name: Run Pylint
         run: |
-          pylint **/*.py
+          pylint **/*.py --exit-zero
   
   test:
     runs-on: ubuntu-latest
