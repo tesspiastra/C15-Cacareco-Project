@@ -1,0 +1,55 @@
+IF OBJECT_ID('plant_status', 'U') IS NOT NULL DROP TABLE plant_status;
+IF OBJECT_ID('botanist', 'U') IS NOT NULL DROP TABLE botanist;
+IF OBJECT_ID('plant', 'U') IS NOT NULL DROP TABLE plant;
+IF OBJECT_ID('origin_location', 'U') IS NOT NULL DROP TABLE origin_location;
+IF OBJECT_ID('city', 'U') IS NOT NULL DROP TABLE city;
+IF OBJECT_ID('country', 'U') IS NOT NULL DROP TABLE country;
+
+CREATE TABLE country (
+    country_id SMALLINT PRIMARY KEY,
+    country_name VARCHAR(30) NOT NULL
+);
+
+CREATE TABLE city (
+    city_id INT PRIMARY KEY,
+    city_name VARCHAR(30) NOT NULL,
+    country_id SMALLINT NOT NULL,
+    FOREIGN KEY (country_id) REFERENCES country(country_id)
+);
+
+CREATE TABLE origin_location (
+    origin_location_id INT PRIMARY KEY,
+    latitude FLOAT NOT NULL,
+    longitude FLOAT NOT NULL,
+    region_name VARCHAR(30) NOT NULL,
+    city_id INT NOT NULL,
+    FOREIGN KEY (city_id) REFERENCES city(city_id)
+);
+
+CREATE TABLE plant (
+    plant_id INT PRIMARY KEY,
+    plant_name VARCHAR(30) NOT NULL,
+    plant_scientific_name VARCHAR(30),
+    origin_location_id INT NOT NULL,
+    last_watered DATETIME,
+    image_link VARCHAR(100),
+    FOREIGN KEY (origin_location_id) REFERENCES origin_location(origin_location_id)
+);
+
+CREATE TABLE botanist (
+    botanist_id SMALLINT PRIMARY KEY,
+    botanist_name VARCHAR(30) NOT NULL,
+    botanist_email VARCHAR(30) NOT NULL,
+    botanist_phone VARCHAR(30)
+);
+
+CREATE TABLE plant_status (
+    plant_status_id BIGINT PRIMARY KEY,
+    botanist_id SMALLINT NOT NULL,
+    plant_id INT NOT NULL,
+    recording_taken DATETIME NOT NULL,
+    soil_moisture FLOAT,
+    temperature FLOAT,
+    FOREIGN KEY (botanist_id) REFERENCES botanist(botanist_id),
+    FOREIGN KEY (plant_id) REFERENCES plant(plant_id)
+);
