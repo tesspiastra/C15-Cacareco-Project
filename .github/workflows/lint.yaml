@@ -24,7 +24,7 @@ jobs:
       - name: Install dependencies
         run: |
           python3 -m pip install --upgrade pip
-          pip install pylint pytest pytest-cov
+          pip install pylint pytest
 
       - name: Run Pylint
         run: |
@@ -47,6 +47,7 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip
           pip install -r pipeline/requirements.txt
+          pip install pytest-cov
       
       - name: Run Pytest
         run: |
