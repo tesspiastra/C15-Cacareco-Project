@@ -8,28 +8,32 @@ def query_db(query: str, params: list) -> tuple:
     load_dotenv()
     conn = pymssql.connect(
         environ["DB_HOST"], environ["DB_USER"], environ["DB_PASSWORD"], environ["DB_NAME"])
-    cursor = conn.cursor(as_dict=True)
+    cursor = conn.cursor()
 
-    output = cursor.execute(query, params)
+    cursor.execute(query, params)
+    output = cursor.fetchall()
     return output
 
 
 def get_daily_data():
-    today = datetime.now().date()
-
     q = """
-        SELECT
+        SELECT 
             * 
         FROM 
-            plant_status
-        WHERE
-            DATE(recording_taken) = %s
+            plant_status 
+        WHERE 
+            DATENAME(year, recording_taken) = DATENAME(year, CURRENT_TIMESTAMP)
+            AND 
+            DATENAME(month, recording_taken) = DATENAME(month, CURRENT_TIMESTAMP)
+            AND
+            DATENAME(day, recording_taken) = DATENAME(day, CURRENT_TIMESTAMP);
         """
 
-    data_today = query_db(q, today)
+    data_today = query_db(q, [])
+    return data_today
 
 
-def tuples_to_csv():
+def tuples_to_csv(tuple_data):
     pass
 
 
