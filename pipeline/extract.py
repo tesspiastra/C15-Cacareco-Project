@@ -5,7 +5,7 @@ import requests as req
 def get_plant_data(url, plant_id: int) -> dict:
     """Fetches plant data by plant_id."""
     response = req.get(f'{url}{plant_id}')
-    
+
     return response.json()
 
 
@@ -23,4 +23,3 @@ def extract_all_plant_data() -> dict:
 if __name__ == "__main__":
     plants = extract_all_plant_data()
     print(plants[0].get('name'))
-
