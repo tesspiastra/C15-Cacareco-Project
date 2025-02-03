@@ -1,1 +1,4 @@
 requests
+pylint
+pytest
+pyodbc

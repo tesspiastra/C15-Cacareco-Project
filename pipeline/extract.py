@@ -1,19 +1,26 @@
-"""performs extract """
+"""performs extraction on the api as part of a ETL pipeline"""
 import requests as req
-    
-    
-def get_plant_data(plant_id: int) -> list[str]:
-    """"""
+
+
+def get_plant_data(plant_id: int) -> dict:
+    """Fetches plant data by plant_id."""
     url = 'https://data-eng-plants-api.herokuapp.com/plants/'
     response = req.get(f'{url}{plant_id}')
+    
     return response.json()
 
-def extract_all_plant_data():
-    """"""
-    for i in range(50):
-        plant_id = i
-        plant = {plant_id: get_plant_data(plant_id)}
-        print(plant[i].get('name'))
+
+def extract_all_plant_data() -> dict:
+    """Fetches all plant data and stores it in a dictionary."""
+    plant_data = {}
+
+    for plant_id in range(50):
+        plant_data[plant_id] = get_plant_data(plant_id)
+
+    return plant_data
+
 
 if __name__ == "__main__":
-    extract_all_plant_data()
+    plants = extract_all_plant_data()
+    print(plants[0].get('name'))
+
