@@ -2,9 +2,8 @@
 import requests as req
 
 
-def get_plant_data(plant_id: int) -> dict:
+def get_plant_data(url, plant_id: int) -> dict:
     """Fetches plant data by plant_id."""
-    url = 'https://data-eng-plants-api.herokuapp.com/plants/'
     response = req.get(f'{url}{plant_id}')
     
     return response.json()
@@ -13,9 +12,10 @@ def get_plant_data(plant_id: int) -> dict:
 def extract_all_plant_data() -> dict:
     """Fetches all plant data and stores it in a dictionary."""
     plant_data = {}
+    url = 'https://data-eng-plants-api.herokuapp.com/plants/'
 
     for plant_id in range(50):
-        plant_data[plant_id] = get_plant_data(plant_id)
+        plant_data[plant_id] = get_plant_data(url, plant_id)
 
     return plant_data
 
