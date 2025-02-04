@@ -165,7 +165,7 @@ if __name__ == "__main__":
     countries = extract_country_data(api_data)
     load_into_db(conn, countries,
                  "INSERT INTO country (country_name) VALUES (%s)")
-    
+
     country_map = get_id_mapping(
         conn, "SELECT country_name, country_id FROM country")
 
@@ -173,7 +173,7 @@ if __name__ == "__main__":
 
     load_into_db(
         conn, cities, "INSERT INTO city (city_name, country_id) VALUES (%s, %s)")
-    
+
     city_map = get_id_mapping(conn, "SELECT city_name, city_id FROM city")
 
     origin_location = extract_origin_location_data(api_data, city_map)

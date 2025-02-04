@@ -64,7 +64,7 @@ def test_extract_origin_location_data(sample_api_data):
 
 
 def test_extract_plant_data(sample_api_data):
-    origin_location_map = {"33.95015,-118.03917": 1, "-33.918861,18.423300": 2}
+    origin_location_map = {"America/Los_Angeles": 1, "Africa/Johannesburg": 2}
     expected = [("Venus flytrap", "Dionaea muscipula", 1, "http://example.com/image1.jpg"),
                 ("Sundew", "Drosera capensis", 2, "http://example.com/image2.jpg")]
     result = extract_plant_data(sample_api_data, origin_location_map)
