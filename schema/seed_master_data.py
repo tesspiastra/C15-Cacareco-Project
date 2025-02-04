@@ -187,7 +187,7 @@ if __name__ == "__main__":
 
     plants = extract_plant_data(api_data, origin_location_map)
     load_into_db(
-        conn, plants, "INSERT INTO plant (plant_name, plant_scientific_name, origin_location_id, image_link) VALUES (%s, %s, %s, %s)")
+        conn, plants, "INSERT INTO plant (plant_id, plant_name, plant_scientific_name, origin_location_id, image_link) VALUES (%s, %s, %s, %s, %s)")
 
     botanists = extract_botany_data(api_data)
     load_into_db(conn, botanists,
