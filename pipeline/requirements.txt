@@ -1,4 +1,5 @@
 requests
 pylint
 pytest
-pyodbc
+pymssql
+python-dotenv
