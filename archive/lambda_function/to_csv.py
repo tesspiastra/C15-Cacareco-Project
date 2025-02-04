@@ -50,7 +50,7 @@ def get_daily_data():
 
 
 def tuples_to_csv(tuple_data: list[tuple]) -> str:
-    """write a list of tuples to a csv file"""
+    """write a list of tuples to a csv file and returns the target S3 filepath"""
     directories = "data/" + datetime.now().strftime("%Y/%m")
     s3_filepath = f"{datetime.now().strftime("%Y/%m/%d")}_hist.csv"
     local_filepath = f"data/{s3_filepath}"
@@ -86,6 +86,7 @@ def write_to_s3(filepath: str) -> bool:
 
 
 def handler(event, context):
+    """lambda handler"""
     load_dotenv()
     data = get_daily_data()
     filepath = tuples_to_csv(data)
