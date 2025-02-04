@@ -45,7 +45,7 @@ def validate_temperature(temperature: float) -> float:
     return temperature if temperature is not None and -50 <= temperature <= 50 else None
 
 
-def validate_and_transform(data: dict, botanist_map: dict) -> tuple:
+def validate_and_transform(data: dict, conn) -> tuple:
     """Validates and transforms the API response into a format suitable for the database."""
     plant_id = data.get("plant_id")
     recording_taken = parse_datetime(
@@ -56,28 +56,25 @@ def validate_and_transform(data: dict, botanist_map: dict) -> tuple:
         data.get("last_watered"), "%a, %d %b %Y %H:%M:%S %Z")
 
     botanist_email = data.get("botanist", {}).get("email")
-    botanist_id = botanist_map.get(botanist_email)
 
+    cursor = conn.cursor()
+    cursor.execute("SELECT botanist_email, botanist_id FROM botanist")
+    botanist_map = {row[0]: row[1] for row in cursor.fetchall()}
+    cursor.close()
+    
+    botanist_id = botanist_map.get(botanist_email)
+    
+    if None in (botanist_id, plant_id, recording_taken, soil_moisture, temperature, last_watered):
+        return None
     return (botanist_id, plant_id, recording_taken, soil_moisture, temperature, last_watered)
     
-    
 
-
-
-def get_id_mapping(conn, query: str) -> dict:
-    """Fetches mapping of identifiers from the database."""
-    cursor = conn.cursor()
-    cursor.execute(query)
-    return {row[0]: row[1] for row in cursor.fetchall()}
 
 
 
 if __name__ == "__main__":
     load_dotenv()
     conn = get_connection()
-
-    botanist_map = get_id_mapping(
-        conn, "SELECT botanist_email, botanist_id FROM botanist")
     plants = {
         1: {
             "name": "Venus flytrap",
@@ -95,7 +92,9 @@ if __name__ == "__main__":
         }
     }
     data = []
-    for plant in plants: # This comes from load script
-        data.append(validate_and_transform(plant, botanist_map))
+    for plant in plants:
+        transformed_entry = validate_and_transform(plant)
+        if transformed_entry is not None:
+            data.append(validate_and_transform(plant))
 
     conn.close()
