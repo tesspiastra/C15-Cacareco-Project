@@ -4,3 +4,4 @@ pytest
 pyodbc
 pymssql
 python-dotenv
+boto3
