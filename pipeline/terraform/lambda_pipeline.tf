@@ -7,7 +7,7 @@ provider "aws" {
 # ECR
 
 data "aws_ecr_repository" "lambda-image-repo" {
-  name = "c15-tess-lambda-report"
+  name = "c15-cacareco-lambda-pipeline"
 }
 
 data "aws_ecr_image" "lambda-image-version" {
@@ -50,7 +50,7 @@ resource "aws_iam_role" "lambda-role" {
 }
 
 resource "aws_iam_policy" "lambda-role-permissions-policy" {
-  name = "c15-cacareco-lambda-email-policy"
+  name = "c15-cacareco-lambda-pipeline-policy"
   policy = data.aws_iam_policy_document.lambda-role-permissions-policy-doc.json
 }
 
