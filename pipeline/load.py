@@ -21,12 +21,12 @@ def get_connection():
 
 def upload_data(conn: Connection, data):
     """Uploads data to database"""
-    cursor = conn.cursor()
-    query = """INSERT INTO plant_status (
-        botanist_id,plant_id,recording_taken,
-        soil_moisture,temperature)"""
-    cursor.execute(query)
-    cursor.close()
+    with conn.cursor as cursor:
+        query = """INSERT INTO plant_status (
+            botanist_id,plant_id,recording_taken,
+            soil_moisture,temperature, last_watered)"""
+        cursor.executemany(query, data)
+    conn.commit()
     print("Uploaded to database")
 
 
