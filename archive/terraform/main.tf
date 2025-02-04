@@ -52,7 +52,7 @@ resource "aws_iam_user_group_membership" "user_group_membership" {
 # Lambda build
 
 data "aws_ecr_repository" "lambda-repo" {
-  name = "c15-cacareco-lmnh-plants-archive-lambda"
+  name = "c15-cacareco-lmnh-plants-archive"
 }
 
 data "aws_ecr_image" "lambda-image" {
