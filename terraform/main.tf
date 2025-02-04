@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 data "aws_ecr_repository" "image-repo" {
-    name = "c15-cacareco-lmnh-plants-pipeline"
+    name = "c15-cacareco-lmnh-plants-dashboard"
 }
 
 data "aws_ecr_image" "image-version" {
@@ -15,11 +15,11 @@ data "aws_iam_role" "execution-role" {
   name = "ecsTaskExecutionRole"
 }
 
-resource "aws_ecs_task_definition" "c15-cacareco-plants-pipeline-td" {
+resource "aws_ecs_task_definition" "c15-cacareco-plants-dashboard-td" {
     family = "c15-cacareco-lmnh-plants"
     container_definitions = jsonencode([
         {
-            name      = "c15-cacareco-plants-pipeline-td"
+            name      = "c15-cacareco-plants-dashboard-td"
             image     = data.aws_ecr_image.image-version.image_uri
             essential = true
             memory = 512
