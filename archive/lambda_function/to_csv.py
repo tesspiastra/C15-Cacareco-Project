@@ -5,12 +5,12 @@ from datetime import datetime, date
 
 from dotenv import load_dotenv
 import boto3
+from botocore.exceptions import ClientError
 import pymssql
 
 
 def query_db(query: str, params: list) -> tuple:
     """Query a MS SQL Server Database"""
-    load_dotenv()
     conn = pymssql.connect(environ["DB_HOST"],
                            environ["DB_USER"],
                            environ["DB_PASSWORD"],
@@ -52,27 +52,35 @@ def get_daily_data():
 def tuples_to_csv(tuple_data: list[tuple]) -> str:
     """write a list of tuples to a csv file"""
     directories = "data/" + datetime.now().strftime("%Y/%m")
-    full_filename = datetime.now().strftime("%Y/%m/%d")
-    filepath = f"data/{full_filename}_hist.csv"
+    s3_filepath = f"{datetime.now().strftime("%Y/%m/%d")}_hist.csv"
+    local_filepath = f"data/{s3_filepath}"
     if not path.exists(directories):
         makedirs(directories)
-    with open(filepath, "w") as file:
+    with open(local_filepath, "w") as file:
         csv_writer = csv.writer(file)
         csv_writer.writerows(tuple_data)
-    return full_filename
+    return s3_filepath
 
 
-def write_to_s3(filepath: str):
+def write_to_s3(filepath: str) -> bool:
     """write a csv file to an S3 bucket"""
-    s3 = boto3.resource("s3")
-
-    s3.Bucket("BUCKET_NAME").upload_file(filepath)
+    s3 = boto3.client("s3", aws_access_key_id=environ["AWS_ACCESS_KEY"],
+                      aws_secret_access_key=environ["AWS_SECRET_ACCESS_KEY"])
+    local_path = "data/" + filepath
+    try:
+        response = s3.upload_file(local_path,
+                                  "c15-cacareco-archive", filepath)
+    except ClientError as e:
+        print(e)
+        return False
+    return True
 
 
 def handler(event, context):
+    load_dotenv()
     data = get_daily_data()
     filepath = tuples_to_csv(data)
-    # write_to_s3(filepath)
+    write_to_s3(filepath)
 
 
 if __name__ == "__main__":
