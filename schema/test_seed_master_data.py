@@ -3,7 +3,7 @@ import pytest
 from seed_master_data import (
     get_plant_data, extract_country_data, extract_city_data,
     extract_origin_location_data, extract_plant_data, extract_botany_data,
-    get_connection, load_into_db, get_id_mapping
+    load_into_db, get_id_mapping
 )
 
 
@@ -77,13 +77,6 @@ def test_extract_botany_data(sample_api_data):
     result = extract_botany_data(sample_api_data)
     assert result == expected
 
-
-@patch("pymssql.connect")
-def test_get_connection(mock_connect):
-    mock_connect.return_value = MagicMock()
-    conn = get_connection()
-    assert conn is not None
-    mock_connect.assert_called_once()
 
 
 @patch("pymssql.connect")

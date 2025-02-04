@@ -17,8 +17,7 @@ def get_connection():
         port=ENV["DB_PORT"],
         user=ENV["DB_USER"],
         password=ENV["DB_PASSWORD"],
-        database=ENV["DB_NAME"],
-        as_dict=True
+        database=ENV["DB_NAME"]
     )
 
 
@@ -89,9 +88,9 @@ def extract_origin_location_data(api_data: dict, city_map: dict) -> list:
         region_name = origin_info[4]
         city_id = city_map.get(city_name)
 
-        if (latitude, longitude) not in seen_origin_location:
+        if region_name not in seen_origin_location:
             origin_location.append((latitude, longitude, region_name, city_id))
-            seen_origin_location.add((latitude, longitude))
+            seen_origin_location.add(region_name)
 
     return origin_location
 
@@ -106,18 +105,20 @@ def extract_plant_data(api_data: dict, origin_location_map: dict) -> list:
         scientific_name = plant.get("scientific_name")
         origin_info = plant.get(
             "origin_location", [None, None, None, None, None])
-        latitude = origin_info[0]
-        longitude = origin_info[1]
+        region_name = origin_info[4]
 
-        origin_location_id = origin_location_map.get(f"{latitude},{longitude}")
-        images = plant.get('images')
-        image_link = images.get('original_url')
+        origin_location_id = origin_location_map.get(region_name)
+
+        images = plant.get("images") or {}
+        image_link = images.get("original_url")
 
         if name not in seen_plants:
-            plants.append((name, scientific_name, origin_location_id, image_link))
+            plants.append(
+                (name, scientific_name, origin_location_id, image_link))
             seen_plants.add(name)
 
     return plants
+
 
 
 
@@ -177,8 +178,11 @@ if __name__ == "__main__":
 
     origin_location = extract_origin_location_data(api_data, city_map)
 
+    load_into_db(
+        conn, origin_location, "INSERT INTO origin_location (latitude, longitude, region_name, city_id) VALUES (%s, %s, %s, %s)")
+
     origin_location_map = get_id_mapping(conn,
-                                         "SELECT CONCAT(latitude, ',', longitude), origin_location_id FROM origin_location")
+                                         "SELECT region_name, origin_location_id FROM origin_location")
 
     plants = extract_plant_data(api_data, origin_location_map)
     load_into_db(
