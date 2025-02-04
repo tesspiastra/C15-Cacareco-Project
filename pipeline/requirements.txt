@@ -1,5 +1,7 @@
 requests
 pylint
 pytest
+pyodbc
 pymssql
 python-dotenv
+boto3
