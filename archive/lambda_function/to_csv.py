@@ -29,7 +29,7 @@ def get_daily_data():
     """get today's data from the RDS"""
     q = """
         SELECT 
-            plant_name, botanist_name, region_name, city_name, country_name
+            plant_name, botanist_name, region_name, city_name, country_name, recording_taken, soil_moisture, temperature, last_watered
         FROM 
             plant_status 
         JOIN plant ON (plant_status.plant_id = plant.plant_id)
@@ -58,6 +58,15 @@ def tuples_to_csv(tuple_data: list[tuple]) -> str:
         makedirs(directories)
     with open(local_filepath, "w") as file:
         csv_writer = csv.writer(file)
+        csv_writer.writerow(("plant_name",
+                             "botanist_name",
+                             "region_name",
+                             "city_name",
+                             "country_name",
+                             "recording_taken",
+                             "soil_moisture",
+                             "temperature",
+                             "last_watered"))
         csv_writer.writerows(tuple_data)
     return s3_filepath
 
