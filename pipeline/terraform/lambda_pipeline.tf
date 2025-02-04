@@ -45,12 +45,12 @@ data "aws_iam_policy_document" "lambda-role-permissions-policy-doc" {
 # Role
 
 resource "aws_iam_role" "lambda-role" {
-  name ="c15-tess-lambda-role"
+  name ="c15-cacareco-lambda-role"
   assume_role_policy = data.aws_iam_policy_document.lambda-role-trust-policy-doc.json
 }
 
 resource "aws_iam_policy" "lambda-role-permissions-policy" {
-  name = "c15-tess-lambda-email-policy"
+  name = "c15-cacareco-lambda-email-policy"
   policy = data.aws_iam_policy_document.lambda-role-permissions-policy-doc.json
 }
 
@@ -61,8 +61,8 @@ resource "aws_iam_role_policy_attachment" "lambda-role-policy-attachment" {
 
 # Lambda
 
-resource "aws_lambda_function" "report-email-lambda" {
-  function_name = "c15-tess-lambda-report"
+resource "aws_lambda_function" "pipeline-lambda" {
+  function_name = "c15-cacareco-pipeline-lambda"
   role = aws_iam_role.lambda-role.arn
   package_type = "Image"
   image_uri = data.aws_ecr_image.lambda-image-version.image_uri
