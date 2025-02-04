@@ -15,7 +15,7 @@ data "aws_iam_role" "execution-role" {
   name = "ecsTaskExecutionRole"
 }
 
-resource "aws_ecs_task_definition" "zander-t3-batch-td" {
+resource "aws_ecs_task_definition" "c15-cacareco-plants-pipeline-td" {
     family = "c15-cacareco-lmnh-plants"
     container_definitions = jsonencode([
         {
