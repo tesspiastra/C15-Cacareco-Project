@@ -20,6 +20,6 @@ VALUES
     ('TEST_BOTANIST_NAME', 'TEST_BOTANIST_EMAIL');
 
 INSERT INTO plant_status 
-    (botanist_id, plant_id, recording_taken) 
+    (botanist_id, plant_id, recording_taken, last_watered, temperature) 
 VALUES 
-    (1, 1, CURRENT_TIMESTAMP);
+    (1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 20.0);
