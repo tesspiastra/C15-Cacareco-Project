@@ -94,7 +94,7 @@ def upload_data(conn: Connection, data: list[tuple]):
     conn.commit()
     print("Uploaded to database")
 
-if __name__ == "__main__":
+def handler():
     plants = extract_all_plant_data()
     data = []
     conn = get_connection()
