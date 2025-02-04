@@ -1,6 +1,6 @@
 # Run using bash connect.sh [seed|reset]
 
-source ../pipeline/.env
+source ../.env
 
 # Set default schema for the user
 sqlcmd -S "$DB_HOST,$DB_PORT" -U "$DB_USER" -P "$DB_PASSWORD" -d "$DB_NAME" -Q "ALTER USER [$DB_USER] WITH DEFAULT_SCHEMA = [$SCHEMA_NAME]"

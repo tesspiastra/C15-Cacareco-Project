@@ -27,7 +27,7 @@ CREATE TABLE origin_location (
 );
 
 CREATE TABLE plant (
-    plant_id INT IDENTITY(1,1) PRIMARY KEY,
+    plant_id INT PRIMARY KEY,
     plant_name VARCHAR(30) NOT NULL,
     plant_scientific_name VARCHAR(100),
     origin_location_id INT NOT NULL,
