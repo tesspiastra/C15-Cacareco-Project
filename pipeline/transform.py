@@ -61,11 +61,12 @@ def validate_and_transform(data: dict, conn) -> tuple:
     cursor.execute("SELECT botanist_email, botanist_id FROM botanist")
     botanist_map = {row[0]: row[1] for row in cursor.fetchall()}
     cursor.close()
-    
+
     botanist_id = botanist_map.get(botanist_email)
-    
-    if None in (botanist_id, plant_id, recording_taken, soil_moisture, temperature, last_watered):
+
+    if not all([soil_moisture, temperature, last_watered]) or None in (botanist_id, plant_id, recording_taken):
         return None
+    
     return (botanist_id, plant_id, recording_taken, soil_moisture, temperature, last_watered)
     
 
