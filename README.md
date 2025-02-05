@@ -26,8 +26,10 @@ Ensure you have the following installed
 
 This project includes multiple requirements files, all of which are pre-installed in their respective Docker images.
 
-If not using Docker, manually install dependencies:
-```pip3 install -r requirements.txt```
+If not using Docker, manually install dependencies, Ensure you have a .venv by running:
+```python3 -m venv .venv```
+Then running:
+```pip3 install -r requirements.txt```.
 
 ### Set up
 
