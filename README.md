@@ -84,8 +84,17 @@ The dashboard was designed according to this wireframe:
 
 Currently there are tests for all written python files. Our tests are written with `pytest`, therefore if you want to run them yourself you should ensure that pytest is installed. 
 
+These were to ensure that CI/CD as that a push request can only be accepted when all tests were passing.
+
+### Seeding
+
+When seeding master data it was imperative that everything went as according to plan, so a test for all the functions were written [here](./schema/test_seed_master_data.py)
+
 ### ETL testing
 We segmented the tests for the pipeline into [Extract](/pipeline/ETL-scripts/test_extract.py), [Transform](/pipeline/ETL-scripts/test_transform.py), and [Load](/pipeline/ETL-scripts/test_load.py). 
+
+### Archive
+To ensure that we achieve the filepath we expect we tested the archive_pipeline function [here](./archive/lambda_function/test_archive_pipeline.py)
 
 To execute these tests, run:
 `pytest [filename]`
