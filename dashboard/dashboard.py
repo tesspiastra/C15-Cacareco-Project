@@ -1,8 +1,9 @@
+from os import environ as ENV
+
 import altair as alt
 import pandas as pd
 import streamlit as st
 from pymssql import connect
-from os import environ as ENV
 from dotenv import load_dotenv
 
 
@@ -15,6 +16,7 @@ def get_connection():
         password=ENV["DB_PASSWORD"],
         database=ENV["DB_NAME"]
     )
+
 
 if __name__ == "__main__":
     load_dotenv()
