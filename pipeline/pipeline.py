@@ -4,17 +4,20 @@ from datetime import datetime
 # Installed
 import logging
 import requests as req
+import asyncio
+import aiohttp
 from pymssql import connect, Connection
 from dotenv import load_dotenv
 
 from logger_config import setup_logging
 
 
-def get_plant_data(url, plant_id: int) -> dict:
+def get_plant_data(session, url, plant_id: int) -> dict:
     """Fetches plant data by plant_id."""
-    response = req.get(f'{url}{plant_id}')
+    async with session.get(f"{url}{plant_id}") as response:
+        return await response.json()
 
-    return response.json()
+    
 
 
 def extract_all_plant_data() -> dict:
