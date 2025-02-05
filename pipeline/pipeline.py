@@ -69,7 +69,7 @@ def validate_temperature(temperature: float) -> float:
 
 def validate_and_transform(data: dict, conn) -> tuple:
     """Validates and transforms the API response into a format suitable for the database."""
-    plant_id = data.get("plant_id")
+    plant_id = int(data.get("plant_id"))
     recording_taken = parse_datetime(
         data.get("recording_taken"), "%Y-%m-%d %H:%M:%S")
     soil_moisture = validate_soil_moisture(data.get("soil_moisture"))
@@ -101,7 +101,6 @@ def upload_data(conn: Connection, data: list[tuple]):
         cursor.executemany(query, data)
     conn.commit()
 
-
 def handler():
     setup_logging("console")
     loop = asyncio.get_event_loop()
@@ -120,3 +119,6 @@ def handler():
     upload_data(conn, data)
     logging.info("Plant data successfully uploaded to database.")
     conn.close()
+
+if __name__ == "__main__":
+    handler()

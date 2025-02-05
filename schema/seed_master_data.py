@@ -99,7 +99,6 @@ def extract_origin_location_data(api_data: dict, city_map: dict) -> list:
 def extract_plant_data(api_data: dict, origin_location_map: dict) -> list:
     """Extracts all the plant data from the api_data dictionary"""
     plants = []
-    seen_plants = set()
 
     for plant in api_data.values():
         plant_id = int(plant.get("plant_id"))
@@ -115,15 +114,10 @@ def extract_plant_data(api_data: dict, origin_location_map: dict) -> list:
         images = plant.get("images") or {}
         image_link = images.get("original_url")
 
-        if name not in seen_plants:
-            plants.append(
-                (plant_id, name, scientific_name, origin_location_id, image_link))
-            seen_plants.add(name)
+        plants.append(
+            (plant_id, name, scientific_name, origin_location_id, image_link))
 
     return plants
-
-
-
 
 
 def extract_botany_data(api_data: dict) -> list:
@@ -142,8 +136,6 @@ def extract_botany_data(api_data: dict) -> list:
             seen_emails.add(email)
 
     return botany_list
-
-
 
 
 def load_into_db(conn, data: list, query: str) -> None:
