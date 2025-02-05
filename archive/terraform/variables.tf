@@ -6,10 +6,6 @@ variable "AWS_SECRET_ACCESS_KEY" {
   type = string
 }
 
-variable "REGION" {
-  type = string
-}
-
 variable "DB_HOST" {
   type = string
 }
