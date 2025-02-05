@@ -1,11 +1,11 @@
-FROM public.ecr.aws/lambda/python:3.8
+FROM public.ecr.aws/lambda/python:latest
 
 WORKDIR ${LAMBDA_TASK_ROOT}
 
 COPY requirements.txt .
 
-RUN pip3 install -r requirements.txt
+RUN pip install -r requirements.txt 
 
-COPY to_csv.py .
+COPY archive_pipeline.py .
 
-CMD [ "to_csv.handler" ]
+CMD [ "archive_pipeline.handler" ]
