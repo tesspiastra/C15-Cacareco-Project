@@ -76,10 +76,8 @@ def tuples_to_csv(tuple_data: list[tuple]) -> str:
     return s3_filepath
 
 
-def write_to_s3(filepath: str) -> bool:
+def write_to_s3(filepath: str, s3) -> bool:
     """write a csv file to an S3 bucket"""
-    s3 = boto3.client("s3", aws_access_key_id=environ["AWS_ACCESS_KEY"],
-                      aws_secret_access_key=environ["AWS_SECRET_ACCESS_KEY"])
     local_path = "/tmp/" + filepath
     try:
         response = s3.upload_file(local_path,
@@ -92,10 +90,12 @@ def write_to_s3(filepath: str) -> bool:
 
 def handler(event, context):
     """lambda handler"""
+    s3 = boto3.client("s3", aws_access_key_id=environ["AWS_ACCESS_ID"],
+                      aws_secret_access_key=environ["AWS_ACCESS_SECRET"])
     load_dotenv()
     data = get_daily_data()
     filepath = tuples_to_csv(data)
-    write_to_s3(filepath)
+    write_to_s3(filepath, s3)
 
 
 if __name__ == "__main__":
