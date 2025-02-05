@@ -39,7 +39,9 @@ In order to build the docker images, either run:
 With a different tag for each of the three images. Or use the relevant shell command using `bash ecr_<relevant_file>-push.sh`
 
 ## Architecture
-![Architecture-diagram](./images/LMNH_week1.drawio.png)### Data Pipeline
+![Architecture-diagram](./images/LMNH_week1.drawio.png)
+
+### Data Pipeline
 The architecture diagram below outlines the flow of data through the system, from extraction to storage and visualization.
 
 **Data Flow:**
