@@ -101,6 +101,7 @@ def extract_plant_data(api_data: dict, origin_location_map: dict) -> list:
     seen_plants = set()
 
     for plant in api_data.values():
+        plant_id = int(plant.get("plant_id"))
         name = plant.get("name")
         scientific_name = plant.get("scientific_name")
         origin_info = plant.get(
@@ -114,7 +115,7 @@ def extract_plant_data(api_data: dict, origin_location_map: dict) -> list:
 
         if name not in seen_plants:
             plants.append(
-                (name, scientific_name, origin_location_id, image_link))
+                (plant_id, name, scientific_name, origin_location_id, image_link))
             seen_plants.add(name)
 
     return plants
@@ -186,7 +187,7 @@ if __name__ == "__main__":
 
     plants = extract_plant_data(api_data, origin_location_map)
     load_into_db(
-        conn, plants, "INSERT INTO plant (plant_name, plant_scientific_name, origin_location_id, image_link) VALUES (%s, %s, %s, %s)")
+        conn, plants, "INSERT INTO plant (plant_id, plant_name, plant_scientific_name, origin_location_id, image_link) VALUES (%s, %s, %s, %s, %s)")
 
     botanists = extract_botany_data(api_data)
     load_into_db(conn, botanists,
