@@ -17,6 +17,7 @@ async def get_plant_data(session, url, plant_id: int) -> dict:
     async with session.get(f"{url}{plant_id}") as response:
         return await response.json()
 
+
 async def extract_all_plant_data() -> dict:
     """Fetches all plant data and stores it in a dictionary."""
 
@@ -25,7 +26,7 @@ async def extract_all_plant_data() -> dict:
     async with aiohttp.ClientSession() as session:
         tasks = [get_plant_data(session, url, plant_id)
                  for plant_id in range(50)]
-        
+
         logging.info("Extracted all plant data.")
         return await asyncio.gather(*tasks)
 
