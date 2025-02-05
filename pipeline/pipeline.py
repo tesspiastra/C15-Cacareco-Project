@@ -17,6 +17,7 @@ async def get_plant_data(session, url, plant_id: int) -> dict:
     async with session.get(f"{url}{plant_id}") as response:
         return await response.json()
 
+
 async def extract_all_plant_data() -> dict:
     """Fetches all plant data and stores it in a dictionary."""
 
@@ -25,7 +26,7 @@ async def extract_all_plant_data() -> dict:
     async with aiohttp.ClientSession() as session:
         tasks = [get_plant_data(session, url, plant_id)
                  for plant_id in range(50)]
-        
+
         logging.info("Extracted all plant data.")
         return await asyncio.gather(*tasks)
 
@@ -100,7 +101,9 @@ def upload_data(conn: Connection, data: list[tuple]):
         cursor.executemany(query, data)
     conn.commit()
 
-def handler():
+
+def handler(event, context):
+    load_dotenv()
     setup_logging("console")
     loop = asyncio.get_event_loop()
     plants = loop.run_until_complete(extract_all_plant_data())
@@ -119,5 +122,6 @@ def handler():
     logging.info("Plant data successfully uploaded to database.")
     conn.close()
 
+
 if __name__ == "__main__":
-    handler()
+    handler(None, None)
