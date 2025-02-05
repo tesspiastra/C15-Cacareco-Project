@@ -98,10 +98,7 @@ def upload_data(conn: Connection, data: list[tuple]):
         query = """INSERT INTO plant_status (botanist_id, plant_id, recording_taken, soil_moisture, temperature, last_watered)
             VALUES (%s, %s, %s, %s, %s, %s)
             """
-        for values in data:
-            logging.info(values)
-            cursor.execute(query, values)
-        # cursor.executemany(query, data)
+        cursor.executemany(query, data)
     conn.commit()
 
 
