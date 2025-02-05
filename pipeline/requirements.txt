@@ -5,3 +5,5 @@ pyodbc
 pymssql
 python-dotenv
 boto3
+aiohttp
+asyncio

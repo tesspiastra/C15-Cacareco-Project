@@ -4,29 +4,30 @@ from datetime import datetime
 # Installed
 import logging
 import requests as req
+import asyncio
+import aiohttp
 from pymssql import connect, Connection
 from dotenv import load_dotenv
 
 from logger_config import setup_logging
 
 
-def get_plant_data(url, plant_id: int) -> dict:
+async def get_plant_data(session, url, plant_id: int) -> dict:
     """Fetches plant data by plant_id."""
-    response = req.get(f'{url}{plant_id}')
+    async with session.get(f"{url}{plant_id}") as response:
+        return await response.json()
 
-    return response.json()
-
-
-def extract_all_plant_data() -> dict:
+async def extract_all_plant_data() -> dict:
     """Fetches all plant data and stores it in a dictionary."""
 
     url = 'https://data-eng-plants-api.herokuapp.com/plants/'
-    plant_data = []
-    for plant_id in range(50):
-        plant_data.append(get_plant_data(url, plant_id))
 
-    logging.info("Extracted all plant data.")
-    return plant_data
+    async with aiohttp.ClientSession() as session:
+        tasks = [get_plant_data(session, url, plant_id)
+                 for plant_id in range(50)]
+        
+        logging.info("Extracted all plant data.")
+        return await asyncio.gather(*tasks)
 
 
 def get_connection():
@@ -102,7 +103,9 @@ def upload_data(conn: Connection, data: list[tuple]):
 
 def handler():
     setup_logging("console")
-    plants = extract_all_plant_data()
+    loop = asyncio.get_event_loop()
+    plants = loop.run_until_complete(extract_all_plant_data())
+
     data = []
     conn = get_connection()
     _ = [logging.info("Plant data %s: %s", i, plant)
