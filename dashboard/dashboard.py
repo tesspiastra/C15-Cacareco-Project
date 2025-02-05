@@ -49,7 +49,7 @@ def homepage(conn: Connection):
     st.title("LMNH Botany Department Dashboard")
     st.sidebar.header("Filters")
     plants = ["cactus", "flowers", "bird of paradise"] # example for now
-    setup_sidebar(plants)
+    setup_sidebar(page= "homepage", plants)
     
     
     left_col, right_col = st.columns(2)
@@ -65,7 +65,7 @@ def general_stats(conn: Connection):
     st.title("LMNH Botany Department Dashboard")
     st.subheader("General Stats")
 
-    setup_sidebar(page= "homepage")
+    setup_sidebar(page= "general_stats")
 
 if __name__ == "__main__":
     load_dotenv()
