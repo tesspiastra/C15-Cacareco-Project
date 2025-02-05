@@ -99,4 +99,4 @@ terraform.*
 
 .csv
 data/
-tmp/
+work_with_pandas.ipynb
