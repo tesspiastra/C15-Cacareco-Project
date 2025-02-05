@@ -11,7 +11,7 @@ resource "aws_s3_bucket" "cacareco-plants" {
 
 
 data "aws_ecr_repository" "lambda-repo" {
-  name = "c15/abdul-report-handler"
+  name = "c15-cacareco"
 }
 
 data "aws_ecr_image" "lambda-image" {
@@ -48,13 +48,13 @@ data "aws_iam_policy_document" "lambda-role-permissions-policy-doc" {
 
 # Role
 resource "aws_iam_role" "lambda-role" {
-    name = "c15-abdul-lambda-email-terraform-role"
+    name = "c15-cacareco-archive-lambda-role"
     assume_role_policy = data.aws_iam_policy_document.lambda-role-trust-policy-doc.json
 }
 
 # Permissions policy
 resource "aws_iam_policy" "lambda-role-permissions-policy" {
-    name = "c15-abdul-lambda-email-permissions-policy"
+    name = "c15-cacareco-archive-lambda-policy"
     policy = data.aws_iam_policy_document.lambda-role-permissions-policy-doc.json
 }
 
@@ -65,7 +65,7 @@ resource "aws_iam_role_policy_attachment" "lambda-role-policy-connection" {
 }
 
 resource "aws_lambda_function" "lambda-report" {
-  function_name = "c15-abdul-lambda-report"
+  function_name = "c15-cacareco-archive-lambda"
   timeout = 10
   image_uri = data.aws_ecr_image.lambda-image.image_uri
   package_type = "Image"
@@ -79,11 +79,11 @@ resource "aws_lambda_function" "lambda-report" {
 
   environment {
     variables = {
-    DB_HOST="c15-truck-db.c57vkec7dkkx.eu-west-2.rds.amazonaws.com"
-    DB_PORT="3306"
-    DB_NAME="abdulrahman_dahir"
-    DB_USER="abdulrahman_dahir"
-    DB_PASSWORD="Rihad_Namharludba10"
+    DB_HOST=var.DB_HOST
+    DB_PORT=var.DB_PORT
+    DB_NAME=var.DB_NAME
+    DB_USER=var.DB_USER
+    DB_PASSWORD=var.DB_PASSWORD
     }
   }
   
