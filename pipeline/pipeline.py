@@ -98,10 +98,15 @@ def upload_data(conn: Connection, data: list[tuple]):
         query = """INSERT INTO plant_status (botanist_id, plant_id, recording_taken, soil_moisture, temperature, last_watered)
             VALUES (%s, %s, %s, %s, %s, %s)
             """
-        cursor.executemany(query, data)
+        for values in data:
+            logging.info(values)
+            cursor.execute(query, values)
+        # cursor.executemany(query, data)
     conn.commit()
 
-def handler():
+
+def handler(event, context):
+    load_dotenv()
     setup_logging("console")
     loop = asyncio.get_event_loop()
     plants = loop.run_until_complete(extract_all_plant_data())
@@ -120,5 +125,6 @@ def handler():
     logging.info("Plant data successfully uploaded to database.")
     conn.close()
 
+
 if __name__ == "__main__":
-    handler()
+    handler(None, None)
