@@ -34,9 +34,9 @@ def get_daily_data():
     """get today's data from the RDS"""
     q = """
         SELECT 
-            plant_name, botanist_name, region_name, city_name, country_name, recording_taken, soil_moisture, temperature, last_watered
+            plant_name, botanist_name, city_name, time_zone, country_code, recording_taken, soil_moisture, temperature, last_watered
         FROM 
-            plant_status 
+            plant_status
         JOIN plant ON (plant_status.plant_id = plant.plant_id)
         JOIN botanist ON (plant_status.botanist_id = botanist.botanist_id) 
         JOIN origin_location ON (origin_location.origin_location_id = plant.origin_location_id)
@@ -65,9 +65,9 @@ def tuples_to_csv(tuple_data: list[tuple]) -> str:
         csv_writer = csv.writer(file)
         csv_writer.writerow(("plant_name",
                              "botanist_name",
-                             "region_name",
                              "city_name",
-                             "country_name",
+                             "time_zone",
+                             "country_code",
                              "recording_taken",
                              "soil_moisture",
                              "temperature",
