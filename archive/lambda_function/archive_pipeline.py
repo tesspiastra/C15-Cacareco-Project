@@ -17,7 +17,12 @@ def query_db(query: str, params: list) -> tuple:
                            environ["DB_NAME"])
     cursor = conn.cursor()
 
-    q = "ALTER USER gamma  WITH DEFAULT_SCHEMA = gamma"
+    q = f"""
+        ALTER USER
+            {environ["DB_USER"]}
+        WITH
+            DEFAULT_SCHEMA = {environ["SCHEMA_NAME"]}
+        """
     cursor.execute(q)
 
     cursor.execute(query, params)

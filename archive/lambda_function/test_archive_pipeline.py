@@ -4,7 +4,7 @@ from datetime import datetime
 
 import pytest
 
-from to_csv import tuples_to_csv
+from archive_pipeline import tuples_to_csv
 
 
 @pytest.fixture
