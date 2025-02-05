@@ -1,7 +1,7 @@
 # Creates the S3 and Lambda function
 
 provider "aws" {
-    region = var.REGION
+    region = "eu-west-2"
     access_key = var.AWS_ACCESS_KEY
     secret_key = var.AWS_SECRET_ACCESS_KEY
 }
@@ -89,7 +89,7 @@ resource "aws_lambda_function" "lambda-report" {
     DB_USER=var.DB_USER
     DB_PASSWORD=var.DB_PASSWORD
     SCHEMA_NAME=var.SCHEMA_NAME
-    AWS_ACCESS_KEY_ID=var.AWS_ACCESS_KEY
+    AWS_ACCESS_ID=var.AWS_ACCESS_KEY
     AWS_ACCESS_SECRET=var.AWS_SECRET_ACCESS_KEY
     }
   }
