@@ -1,8 +1,7 @@
 # C15-Cacareco-Project
-
-## Overview
 ![LMNH-picture](./images/LMNH-pic.jpg)
 
+## Overview
 The C15-Cacareco-Project is a full data pipeline system developed for the Liverpool Natural History Museum. It automates the process of collecting, storing, and visualizing plant health data for botanists.
 
 ### Key components
