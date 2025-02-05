@@ -7,13 +7,14 @@ IF OBJECT_ID('country', 'U') IS NOT NULL DROP TABLE country;
 
 CREATE TABLE country (
     country_id SMALLINT IDENTITY(1,1) PRIMARY KEY,
-    country_name VARCHAR(30) NOT NULL
+    country_code VARCHAR(2) NOT NULL
 );
 
 CREATE TABLE city (
     city_id INT IDENTITY(1,1) PRIMARY KEY,
     city_name VARCHAR(30) NOT NULL,
     country_id SMALLINT NOT NULL,
+    time_zone VARCHAR(30) NOT NULL,
     FOREIGN KEY (country_id) REFERENCES country(country_id)
 );
 
@@ -21,7 +22,6 @@ CREATE TABLE origin_location (
     origin_location_id INT IDENTITY(1,1) PRIMARY KEY,
     latitude FLOAT NOT NULL,
     longitude FLOAT NOT NULL,
-    region_name VARCHAR(30) NOT NULL,
     city_id INT NOT NULL,
     FOREIGN KEY (city_id) REFERENCES city(city_id)
 );

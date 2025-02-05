@@ -48,11 +48,11 @@ def extract_country_data(api_data: dict) -> list:
     seen_countries = set()
 
     for plant in api_data.values():
-        country_name = plant.get(
+        country_code = plant.get(
             'origin_location', [None, None, None, None, None])[3]
-        if country_name and country_name not in seen_countries:
-            country_list.append((country_name,))
-            seen_countries.add(country_name)
+        if country_code not in seen_countries:
+            country_list.append((country_code,))
+            seen_countries.add(country_code)
     return country_list
 
 
@@ -64,12 +64,14 @@ def extract_city_data(api_data: dict, country_map: dict) -> list:
     for plant in api_data.values():
         city_name = plant.get('origin_location', [
                               None, None, None, None, None])[2]
-        country_name = plant.get(
+        country_code = plant.get(
             'origin_location', [None, None, None, None, None])[3]
-        country_id = country_map.get(country_name)
+        country_id = country_map.get(country_code)
+        time_zone = plant.get('origin_location', [
+            None, None, None, None, None])[4]
 
-        if city_name and (city_name, country_name) not in seen_cities:
-            city_list.append((city_name, country_id))
+        if city_name not in seen_cities:
+            city_list.append((city_name, country_id, time_zone))
             seen_cities.add((city_name))
     return city_list
 
@@ -85,12 +87,11 @@ def extract_origin_location_data(api_data: dict, city_map: dict) -> list:
         latitude = origin_info[0]
         longitude = origin_info[1]
         city_name = origin_info[2]
-        region_name = origin_info[4]
         city_id = city_map.get(city_name)
 
-        if region_name not in seen_origin_location:
-            origin_location.append((latitude, longitude, region_name, city_id))
-            seen_origin_location.add(region_name)
+        if (latitude, longitude) not in seen_origin_location:
+            origin_location.append((latitude, longitude, city_id))
+            seen_origin_location.add((latitude, longitude))
 
     return origin_location
 
@@ -106,9 +107,10 @@ def extract_plant_data(api_data: dict, origin_location_map: dict) -> list:
         scientific_name = plant.get("scientific_name")
         origin_info = plant.get(
             "origin_location", [None, None, None, None, None])
-        region_name = origin_info[4]
-
-        origin_location_id = origin_location_map.get(region_name)
+        latitude = float(origin_info[0])
+        longitude = float(origin_info[1])
+        origin_location_id = origin_location_map.get(
+            f'{('%.3f' % latitude).rstrip('0').rstrip('.')},{('%.3f' % longitude).rstrip('0').rstrip('.')}')
 
         images = plant.get("images") or {}
         image_link = images.get("original_url")
@@ -165,25 +167,25 @@ if __name__ == "__main__":
     api_data = extract_all_api_data()
     countries = extract_country_data(api_data)
     load_into_db(conn, countries,
-                 "INSERT INTO country (country_name) VALUES (%s)")
+                 "INSERT INTO country (country_code) VALUES (%s)")
 
     country_map = get_id_mapping(
-        conn, "SELECT country_name, country_id FROM country")
+        conn, "SELECT country_code, country_id FROM country")
 
     cities = extract_city_data(api_data, country_map)
 
     load_into_db(
-        conn, cities, "INSERT INTO city (city_name, country_id) VALUES (%s, %s)")
+        conn, cities, "INSERT INTO city (city_name, country_id, time_zone) VALUES (%s, %s, %s)")
 
     city_map = get_id_mapping(conn, "SELECT city_name, city_id FROM city")
 
     origin_location = extract_origin_location_data(api_data, city_map)
 
     load_into_db(
-        conn, origin_location, "INSERT INTO origin_location (latitude, longitude, region_name, city_id) VALUES (%s, %s, %s, %s)")
+        conn, origin_location, "INSERT INTO origin_location (latitude, longitude, city_id) VALUES (%s, %s, %s)")
 
     origin_location_map = get_id_mapping(conn,
-                                         "SELECT region_name, origin_location_id FROM origin_location")
+                                         "SELECT CONCAT(ROUND(latitude, 3), ',', ROUND(longitude, 3)) AS lat_long, origin_location_id FROM origin_location")
 
     plants = extract_plant_data(api_data, origin_location_map)
     load_into_db(
