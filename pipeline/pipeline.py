@@ -2,9 +2,12 @@
 from os import environ as ENV
 from datetime import datetime
 # Installed
+import logging
 import requests as req
 from pymssql import connect, Connection
 from dotenv import load_dotenv
+
+from logger_config import setup_logging
 
 
 def get_plant_data(url, plant_id: int) -> dict:
@@ -16,24 +19,27 @@ def get_plant_data(url, plant_id: int) -> dict:
 
 def extract_all_plant_data() -> dict:
     """Fetches all plant data and stores it in a dictionary."""
-    
+
     url = 'https://data-eng-plants-api.herokuapp.com/plants/'
     plant_data = []
     for plant_id in range(50):
         plant_data.append(get_plant_data(url, plant_id))
 
+    logging.info("Extracted all plant data.")
     return plant_data
 
 
 def get_connection():
     """Makes a connection with the SQL Server database."""
-    return connect(
+    connection = connect(
         server=ENV["DB_HOST"],
         port=ENV["DB_PORT"],
         user=ENV["DB_USER"],
         password=ENV["DB_PASSWORD"],
         database=ENV["DB_NAME"]
     )
+    logging.info("Established a secure connection to the database.")
+    return connection
 
 
 def fetch_latest_plant_status(url: str, plant_id: int) -> dict:
@@ -92,18 +98,21 @@ def upload_data(conn: Connection, data: list[tuple]):
             """
         cursor.executemany(query, data)
     conn.commit()
-    print("Uploaded to database")
+
 
 def handler():
+    setup_logging("console")
     plants = extract_all_plant_data()
     data = []
     conn = get_connection()
-    print(plants)
+    _ = [logging.info("Plant data %s: %s", i, plant)
+         for i, plant in enumerate(plants)]
     for plant in plants:
         transformed_entry = validate_and_transform(plant, conn)
         if transformed_entry is not None:
             data.append(transformed_entry)
+            logging.info("Transformed plant data: %s", transformed_entry)
 
     upload_data(conn, data)
+    logging.info("Plant data successfully uploaded to database.")
     conn.close()
-    
