@@ -14,6 +14,11 @@ elif [ "_$1_" == "_seed_" ]; then
     # Run the seed_master_data.py
     python3 seed_master_data.py
 
+elif [ "_$1_" == "_offline-seed_" ]; then
+    # Run the seed.sql script
+    sqlcmd -S "$DB_HOST,$DB_PORT" -U "$DB_USER" -P "$DB_PASSWORD" -d "$DB_NAME" -i "seed.sql"
+    echo "DB has been filled with dummy data."
+
 else
     # Connect to the DB in terminal
     sqlcmd -S "$DB_HOST,$DB_PORT" -U "$DB_USER" -P "$DB_PASSWORD" -d "$DB_NAME"
