@@ -1,0 +1,4 @@
+wheel
+pymssql 
+python-dotenv
+boto3
