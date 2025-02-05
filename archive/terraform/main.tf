@@ -89,6 +89,9 @@ resource "aws_lambda_function" "lambda-report" {
     DB_USER=var.DB_USER
     DB_PASSWORD=var.DB_PASSWORD
     SCHEMA_NAME=var.SCHEMA_NAME
+    AWS_ACCESS_KEY=var.AWS_ACCESS_KEY
+    AWS_SECRET_ACCESS_KEY=var.AWS_SECRET_ACCESS_KEY
+    REGION=var.REGION
     }
   }
   

@@ -99,3 +99,4 @@ terraform.*
 
 .csv
 data/
+tmp/
