@@ -88,6 +88,7 @@ resource "aws_lambda_function" "lambda-report" {
     DB_NAME=var.DB_NAME
     DB_USER=var.DB_USER
     DB_PASSWORD=var.DB_PASSWORD
+    SCHEMA_NAME=var.SCHEMA_NAME
     }
   }
   
