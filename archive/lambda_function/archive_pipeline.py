@@ -56,9 +56,9 @@ def get_daily_data():
 
 def tuples_to_csv(tuple_data: list[tuple]) -> str:
     """write a list of tuples to a csv file and returns the target S3 filepath"""
-    directories = "tmp/" + datetime.now().strftime("%Y/%m")
+    directories = "/tmp/" + datetime.now().strftime("%Y/%m")
     s3_filepath = f"{datetime.now().strftime("%Y/%m/%d")}_hist.csv"
-    local_filepath = f"tmp/{s3_filepath}"
+    local_filepath = f"/tmp/{s3_filepath}"
     if not path.exists(directories):
         makedirs(directories)
     with open(local_filepath, "w") as file:
@@ -80,7 +80,7 @@ def write_to_s3(filepath: str) -> bool:
     """write a csv file to an S3 bucket"""
     s3 = boto3.client("s3", aws_access_key_id=environ["AWS_ACCESS_KEY"],
                       aws_secret_access_key=environ["AWS_SECRET_ACCESS_KEY"])
-    local_path = "tmp/" + filepath
+    local_path = "/tmp/" + filepath
     try:
         response = s3.upload_file(local_path,
                                   "c15-cacareco-archive", filepath)
