@@ -30,6 +30,7 @@ def sample_api_data():
 
 
 
+
 @patch("requests.get")
 def test_get_plant_data(mock_get, sample_api_data):
     url = "https://data-eng-plants-api.herokuapp.com/plants/"
@@ -53,33 +54,35 @@ def test_extract_country_data(sample_api_data):
 
 def test_extract_city_data(sample_api_data):
     country_map = {"US": 1, "ZA": 2}
-    expected = [("South Whittier", 1), ("Cape Town", 2)]
-    # Pass dictionary directly
+    expected = [
+        ("South Whittier", 1, "America/Los_Angeles"),
+        ("Cape Town", 2, "Africa/Johannesburg")
+    ]
     result = extract_city_data(sample_api_data, country_map)
     assert result == expected
 
 
 def test_extract_origin_location_data(sample_api_data):
     city_map = {"South Whittier": 1, "Cape Town": 2}
-    expected = [
-        ("33.95015", "-118.03917", "America/Los_Angeles", 1),
-        ("-33.918861", "18.423300", "Africa/Johannesburg", 2)
-    ]
-    result = extract_origin_location_data(
-        sample_api_data, city_map)  # Pass dictionary directly
+    expected = [('33.95015', '-118.03917', 1), ('-33.918861', '18.423300', 2)]
+    result = extract_origin_location_data(sample_api_data, city_map)
     assert result == expected
 
 
 def test_extract_plant_data(sample_api_data):
-    origin_location_map = {"America/Los_Angeles": 1, "Africa/Johannesburg": 2}
+    origin_location_map = {
+        "33.95,-118.039": 1,
+        "-33.919,18.423": 2
+    }
     expected = [
         (1, "Venus flytrap", "Dionaea muscipula",
          1, "http://example.com/image1.jpg"),
         (2, "Sundew", "Drosera capensis", 2, "http://example.com/image2.jpg")
     ]
-    # Pass dictionary directly
     result = extract_plant_data(sample_api_data, origin_location_map)
     assert result == expected
+
+
 
 
 def test_extract_botany_data(sample_api_data):
