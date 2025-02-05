@@ -1,3 +1,5 @@
+# Creates the S3 and Lambda function
+
 provider "aws" {
     region = var.REGION
     access_key = var.AWS_ACCESS_KEY
@@ -11,7 +13,7 @@ resource "aws_s3_bucket" "cacareco-plants" {
 
 
 data "aws_ecr_repository" "lambda-repo" {
-  name = "c15-cacareco"
+  name = "c15-cacareco-lmnh-plants-archive"
 }
 
 data "aws_ecr_image" "lambda-image" {
@@ -63,6 +65,8 @@ resource "aws_iam_role_policy_attachment" "lambda-role-policy-connection" {
   role = aws_iam_role.lambda-role.name
   policy_arn = aws_iam_policy.lambda-role-permissions-policy.arn
 }
+
+# Lambda
 
 resource "aws_lambda_function" "lambda-report" {
   function_name = "c15-cacareco-archive-lambda"
