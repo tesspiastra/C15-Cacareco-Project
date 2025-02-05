@@ -5,3 +5,6 @@ pyodbc
 pymssql
 python-dotenv
 boto3
+aiohttp
+
+# Ensure asyncio is not installed when dockerising
