@@ -6,7 +6,7 @@ pymssql
 python-dotenv
 boto3
 aiohttp
-asyncio
+# asyncio
 altair
 pandas
 streamlit

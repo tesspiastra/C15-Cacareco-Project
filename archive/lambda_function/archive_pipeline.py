@@ -34,7 +34,7 @@ def get_daily_data():
     """get today's data from the RDS"""
     q = """
         SELECT 
-            plant_name, botanist_name, city_name, time_zone, country_code, recording_taken, soil_moisture, temperature, last_watered
+            plant_id, plant_name, botanist_name, city_name, time_zone, country_code, recording_taken, soil_moisture, temperature, last_watered
         FROM 
             plant_status
         JOIN plant ON (plant_status.plant_id = plant.plant_id)
@@ -56,14 +56,15 @@ def get_daily_data():
 
 def tuples_to_csv(tuple_data: list[tuple]) -> str:
     """write a list of tuples to a csv file and returns the target S3 filepath"""
-    directories = "data/" + datetime.now().strftime("%Y/%m")
+    directories = "/tmp/" + datetime.now().strftime("%Y/%m")
     s3_filepath = f"{datetime.now().strftime("%Y/%m/%d")}_hist.csv"
-    local_filepath = f"data/{s3_filepath}"
+    local_filepath = f"/tmp/{s3_filepath}"
     if not path.exists(directories):
         makedirs(directories)
     with open(local_filepath, "w") as file:
         csv_writer = csv.writer(file)
-        csv_writer.writerow(("plant_name",
+        csv_writer.writerow(("plant_id",
+                             "plant_name",
                              "botanist_name",
                              "city_name",
                              "time_zone",
@@ -76,11 +77,9 @@ def tuples_to_csv(tuple_data: list[tuple]) -> str:
     return s3_filepath
 
 
-def write_to_s3(filepath: str) -> bool:
+def write_to_s3(filepath: str, s3) -> bool:
     """write a csv file to an S3 bucket"""
-    s3 = boto3.client("s3", aws_access_key_id=environ["AWS_ACCESS_KEY"],
-                      aws_secret_access_key=environ["AWS_SECRET_ACCESS_KEY"])
-    local_path = "data/" + filepath
+    local_path = "/tmp/" + filepath
     try:
         response = s3.upload_file(local_path,
                                   "c15-cacareco-archive", filepath)
@@ -92,10 +91,12 @@ def write_to_s3(filepath: str) -> bool:
 
 def handler(event, context):
     """lambda handler"""
+    s3 = boto3.client("s3", aws_access_key_id=environ["AWS_ACCESS_ID"],
+                      aws_secret_access_key=environ["AWS_ACCESS_SECRET"])
     load_dotenv()
     data = get_daily_data()
     filepath = tuples_to_csv(data)
-    write_to_s3(filepath)
+    write_to_s3(filepath, s3)
 
 
 if __name__ == "__main__":

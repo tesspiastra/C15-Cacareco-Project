@@ -103,7 +103,8 @@ def upload_data(conn: Connection, data: list[tuple]):
     conn.commit()
 
 
-def handler():
+def handler(event, context):
+    load_dotenv()
     setup_logging("console")
     loop = asyncio.get_event_loop()
     plants = loop.run_until_complete(extract_all_plant_data())
@@ -121,10 +122,7 @@ def handler():
     upload_data(conn, data)
     logging.info("Plant data successfully uploaded to database.")
     conn.close()
-
-
+ 
 if __name__ == "__main__":
     handler(None, None)
 
-if __name__ == "__main__":
-    handler()
