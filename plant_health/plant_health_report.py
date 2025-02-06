@@ -103,33 +103,27 @@ def get_alert_data(df: pd.DataFrame):
 
 def handler(event=None, context=None):
     """AWS Lambda handler function."""
-    try:
-        setup_logging()
-        load_dotenv()
+    setup_logging()
+    load_dotenv()
 
-        bucket = "c15-cacareco-archive"
-        prefix = f"{date.today().year}/{date.today().month:02}/"
+    bucket = "c15-cacareco-archive"
+    prefix = f"{date.today().year}/{date.today().month:02}/"
 
-        s3 = connect_to_s3()
-        content = list_objects(s3, bucket, prefix)
-        plants = download_objects(s3, bucket, prefix, content)
-        df = pd.read_csv(f"data/{plants}")
-        df['recording_taken'] = pd.to_datetime(df['recording_taken'])
-        df['last_watered'] = pd.to_datetime(df['last_watered'])
+    s3 = connect_to_s3()
+    content = list_objects(s3, bucket, prefix)
+    plants = download_objects(s3, bucket, prefix, content)
+    df = pd.read_csv(f"data/{plants}")
+    df['recording_taken'] = pd.to_datetime(df['recording_taken'])
+    df['last_watered'] = pd.to_datetime(df['last_watered'])
 
-        df_sorted = df.sort_values(
-            by=['plant_name', 'recording_taken'], ascending=[True, False])
-        warning_data = get_alert_data(df_sorted)
+    df_sorted = df.sort_values(
+        by=['plant_name', 'recording_taken'], ascending=[True, False])
+    warning_data = get_alert_data(df_sorted)
 
-        return {
-            'status_code': 200,
-            'data': json.dumps(warning_data)
-        }
-    except Exception:
-        return {
-            'status_code': 500,
-            'body': json.dumps({'error': 'Internal server error: %s'})
-        }
+    return {
+        'status_code': 200,
+        'data': json.dumps(warning_data)
+    }
 
 
 if __name__ == '__main__':
