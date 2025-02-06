@@ -16,28 +16,34 @@ def get_connection() -> Connection:
         database=ENV["DB_NAME"]
     )
 
+
 def get_plants(conn: Connection) -> list[str]:
     """Fetches all plants from the database."""
     with conn.cursor() as cursor:
-        cursor.execute("SELECT name FROM plants")
+        cursor.execute("SELECT plant_name FROM plant")
         return [plant[0] for plant in cursor.fetchall()]
 
-def setup_sidebar(plants: list[str], page: str) -> tuple:
-    """Sets up the filters in the side bar"""
-    currently_viewing = st.sidebar.selectbox(
-        "Currently Viewing", ["Today", "Historical, general stats"])
-    
-    
-    if currently_viewing == "Today":
-        plant_to_view = st.sidebar.selectbox("Plant to view", plants)
-        return (currently_viewing, plant_to_view)
-    
-    elif currently_viewing == "Historical":
+
+def setup_sidebar(plants: list[str]):
+    """Sets up the filters in the sidebar and updates the selected page"""
+    page_options = ["Homepage", "Historical Data", "General Stats"]
+
+    if "page" not in st.session_state:
+        st.session_state.page = "Homepage"
+
+    st.session_state.page = st.sidebar.radio("Currently Viewing", page_options)
+
+    if st.session_state.page == "Homepage":
+        return st.sidebar.multiselect("Plant to view", plants, default=plants)
+
+    elif st.session_state.page == "Historical Data":
         plant_to_view = st.sidebar.selectbox("Plant to view", plants)
         date_to_view = st.sidebar.date_input("Date to view")
-        return (currently_viewing, plant_to_view, date_to_view)
-    elif currently_viewing == "General Stats":
-        return (currently_viewing, None)
+        return plant_to_view, date_to_view
+
+    elif st.session_state.page == "General Stats":
+        return None
+
 
 def display_temperature_and_moisture():
     """Scatter graph showing the latest temperature and moisture readings for each plant"""
@@ -48,42 +54,45 @@ def display_average_temperature():
     """Bar chart showing average temperature per plant"""
     pass
 
+
 def last_watered():
     """Scatter plot showing last_watered time for each plant"""
     pass
+
 
 def average_soil_moisture():
     """Bar chart showing average soil moisture per plant"""
     pass
 
+
 def temperature_over_time():
     """Line chart showing temperature over time"""
     pass
+
 
 def soil_moisture_over_time():
     """Line chart showing soil moisture over time"""
     pass
 
+
 def number_of_waterings():
     """Bar chart showing number of waterings per plant"""
     pass
+
 
 def unique_origins():
     """Pie Chart showing unique origins of plants"""
     pass
 
+
 def botanist_attending_plants():
     """Bar chart showing number of plants each botanist is attending"""
     pass
 
+
 def homepage(conn: Connection):
     """The default homepage of the dashboard"""
     st.title("LMNH Botany Department Dashboard")
-    st.sidebar.header("Filters")
-    plants = get_plants(conn)
-    setup_sidebar(plants, page= "homepage",)
-    
-    
     left_col, right_col = st.columns(2)
     with left_col:
         display_temperature_and_moisture()
@@ -92,19 +101,18 @@ def homepage(conn: Connection):
         last_watered()
         average_soil_moisture()
 
+
 def historical_data(conn: Connection):
     """Dashboard page for historical data"""
     st.title("LMNH Botany Department Dashboard")
     st.subheader("Historical Data")
-
-    setup_sidebar(page= "historical_data")
 
     left_col, right_col = st.columns(2)
     with left_col:
         temperature_over_time()
     with right_col:
         soil_moisture_over_time()
-    
+
     number_of_waterings()
 
 
@@ -113,7 +121,6 @@ def general_stats(conn: Connection):
     st.title("LMNH Botany Department Dashboard")
     st.subheader("General Stats")
 
-    setup_sidebar(page= "general_stats")
     left_col, right_col = st.columns(2)
     with left_col:
         unique_origins()
@@ -124,5 +131,16 @@ def general_stats(conn: Connection):
 if __name__ == "__main__":
     load_dotenv()
     conn = get_connection()
-    homepage(conn)
+
+    plants = get_plants(conn)
+    setup_sidebar(plants)
+
+    # Render the appropriate page based on selection
+    if st.session_state.page == "Homepage":
+        homepage(conn)
+    elif st.session_state.page == "Historical Data":
+        historical_data(conn)
+    elif st.session_state.page == "General Stats":
+        general_stats(conn)
+
     conn.close()
