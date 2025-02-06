@@ -36,8 +36,16 @@ data "aws_iam_policy_document" "lambda-role-permissions-policy-doc" {
     actions = [ 
         "logs:CreateLogGroup",
         "logs:CreateLogStream",
-        "logs:PutLogEvents" 
-    ]
+        "logs:PutLogEvents",
+        "ec2:getSecrutiyGroupForVpc",
+        "ec2:UnassignPrivateIpAddresses",
+        "ec2:DescribeVpcs",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DeleteNetworkInterface",
+        "ec2:CreateNetworkInterface",
+        "ec2:AssignPrivateIpAddresses"]
     resources = [ "arn:aws:logs:eu-west-2:129033205317:*" ]
   }
 }
@@ -75,4 +83,5 @@ resource "aws_lambda_function" "pipeline-lambda" {
         DB_PORT = var.DB_PORT
         }
     }
+  timeout = 59
 }
