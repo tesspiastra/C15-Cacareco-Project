@@ -1,22 +1,18 @@
 """Stores the functions that query the database"""
 from os import environ as ENV
 
-from boto3 import client
-import altair as alt
 import pandas as pd
 import streamlit as st
 from pymssql import connect, Connection
 from dotenv import load_dotenv
-from datetime import date
 
 
 @st.cache_data
-def fetch_data(_conn: Connection, query: str) -> pd.DataFrame:
+def fetch_data(_conn: Connection, query: str, params: list[int]) -> pd.DataFrame:
     """Fetches data from the database and returns it as a DataFrame"""
-    with conn.cursor(as_dict=True) as cursor:
-        cursor.execute(query)
+    with _conn.cursor(as_dict=True) as cursor:
+        cursor.execute(query, params)
         rows = cursor.fetchall()
-
     return pd.DataFrame(rows)
 
 
@@ -31,7 +27,16 @@ def get_connection_rds() -> Connection:
     )
 
 
-def latest_temp_and_moisture(conn):
+def get_filters(conn, params):
+    """Queries the data for the attributes to filter"""
+    q = """SELECT p.plant_name,ps.recording_taken 
+                        FROM plant_status AS ps
+                        JOIN plant AS p 
+                            ON ps.plant_id = p.plant_id"""
+    return fetch_data(conn, q, params)
+
+
+def get_latest_temp_and_moisture(conn, params):
     """Queries the data for the most recent readings"""
     q = """with ranked_data as (SELECT p.plant_name, 
                 ps.recording_taken,
@@ -45,21 +50,13 @@ def latest_temp_and_moisture(conn):
                 ON p.plant_id = ps.plant_id)
             SELECT * 
             FROM ranked_data
-            WHERE row_num = 1
+            WHERE row_num = 1 AND plant_name = %s
             ORDER BY recording_taken DESC"""
-    df = fetch_data(conn, q)
-    return df
+    return fetch_data(conn, q, params)
 
 
-def average_temp_data(conn: Connection):
-    df = fetch_data(conn, """SELECT p.plant_name, AVG(ps.temperature) AS avg_temperature
-                            FROM plant_status AS ps
-                            JOIN plant AS p ON ps.plant_id = p.plant_id
-                            GROUP BY p.plant_name""")
-    return df
-
-
-def get_last_watered_data(conn):
+def get_last_watered_data(conn, params):
+    """Queries the data for the last time ech plant was watered"""
     q = """with lastwatered as (
             SELECT 
                 ps.last_watered, p.plant_name,ps.recording_taken,
@@ -70,20 +67,52 @@ def get_last_watered_data(conn):
             JOIN plant AS p 
                 ON p.plant_id = ps.plant_id)
             SELECT * FROM lastwatered
-            WHERE row_num = 1
+            WHERE row_num = 1 AND plant_name = %s
             """
-    df = fetch_data(conn, q)
-    return df
+    return fetch_data(conn, q, params)
 
 
-def get_avg_moisture_data():
-    df = fetch_data(conn, """SELECT p.plant_name, AVG(ps.soil_moisture) AS avg_soil_moisture
+def get_average_temp_data(conn: Connection, params):
+    """Queries the data for the average temperatures of each plant"""
+    q = """SELECT p.plant_name, AVG(ps.temperature) AS avg_temperature
                             FROM plant_status AS ps
                             JOIN plant AS p ON ps.plant_id = p.plant_id
-                            GROUP BY p.plant_name""")
-    return df
+                            GROUP BY p.plant_name
+                            WHERE plant_name = %s"""
+    return fetch_data(conn, q, params)
+
+
+def get_avg_moisture_data(conn, params):
+    """Queries the data for the average soil moistures of each plant"""
+    q = """SELECT p.plant_name, AVG(ps.soil_moisture) AS avg_soil_moisture
+                            FROM plant_status AS ps
+                            JOIN plant AS p ON ps.plant_id = p.plant_id
+                            GROUP BY p.plant_name
+                            WHERE plant_name = %s"""
+    return fetch_data(conn, q, params)
+
+
+def get_unique_origins(conn, params):
+    """Queries database for unique locations"""
+    q = """SELECT p.plant_name, o.latitude, o.longitude
+                                FROM plant AS p
+                                JOIN origin_location AS o ON p.origin_location_id = o.origin_location_id
+                            WHERE plant_name = %s"""
+    return fetch_data(conn, q, params)
+
+
+def get_botanists(conn, params):
+    """Retrieves all botanists"""
+    q = """SELECT b.botanist_name, COUNT(ps.plant_id) AS num_plants
+                            FROM botanist AS b
+                            JOIN plant_status AS ps ON b.botanist_id = ps.botanist_id
+                            GROUP BY b.botanist_name
+                            WHERE plant_name = %s
+                                """
+    return fetch_data(conn, q, params)
 
 
 if __name__ == "__main__":
     load_dotenv()
     conn = get_connection_rds()
+    get_filters(conn, [])
