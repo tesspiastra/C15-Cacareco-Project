@@ -8,6 +8,7 @@ import pandas as pd
 import streamlit as st
 from pymssql import connect, Connection
 from dotenv import load_dotenv
+from datetime import date
 
 
 def get_connection_rds() -> Connection:
@@ -25,6 +26,28 @@ def get_connection_s3():
     return client('s3', aws_access_key_id=ENV["ACCESS_KEY"],
                   aws_secret_access_key=ENV["SECRET_KEY"])
 
+
+def list_objects(s3_client, bucket_name: str, prefix: str) -> list[str]:
+    objects = s3_client.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
+    return [o["Key"] for o in objects.get('Contents', [])]
+
+
+def read_s3_file(s3_client, bucket_name: str, file_key: str) -> pd.DataFrame:
+    obj = s3_client.get_object(Bucket=bucket_name, Key=file_key)
+    return pd.read_csv(obj['Body'])
+
+def get_s3_data(s3_client, date_to_view: str) -> pd.DataFrame:
+    """Gets the data from the S3 bucket according to the date"""
+    bucket_name = ENV["S3_BUCKET"]
+    prefix = "historical/"
+    files = list_objects(s3_client, bucket_name, prefix)
+
+    file_name = f"{prefix}{date_to_view.day:02}_hist.csv"
+    if file_name in files:
+        df = read_s3_file(s3_client, bucket_name, file_name)
+        return df
+    else:
+        st.write("No data available for the selected date")
 
 def display_temp_and_moisture(conn):
     """Queries the data for the most recent readings"""
@@ -93,7 +116,7 @@ def setup_sidebar(plants: list[str]) -> tuple[list[str], str]:
     elif st.session_state.page == "Historical Data":
         plants_to_view = st.sidebar.multiselect(
             "Plant to view", plants, default=plants)
-        date_to_view = st.sidebar.date_input("Date to view")
+        date_to_view = st.sidebar.date_input("Select Date", date.today())
         return plants_to_view, date_to_view
 
     elif st.session_state.page == "General Stats":
@@ -157,17 +180,17 @@ def average_soil_moisture(conn: Connection):
     st.altair_chart(chart)
 
 
-def temperature_over_time(conn: Connection):
+def temperature_over_time(s3_data_df: pd.DataFrame):
     """Line chart showing temperature over time"""
     pass
 
 
-def soil_moisture_over_time(conn: Connection):
+def soil_moisture_over_time(s3_data_df: pd.DataFrame):
     """Line chart showing soil moisture over time"""
     pass
 
 
-def number_of_waterings(conn: Connection):
+def number_of_waterings(s3_data_df: pd.DataFrame):
     """Bar chart showing number of waterings per plant"""
     pass
 
@@ -197,7 +220,7 @@ def botanist_attending_plants(conn: Connection):
     st.altair_chart(chart)
 
 
-def homepage(conn: Connection):
+def homepage(conn: Connection, plants_to_view: list[str]):
     """The default homepage of the dashboard"""
     st.title("LMNH Botany Department Dashboard")
     left_col, right_col = st.columns(2)
@@ -209,18 +232,25 @@ def homepage(conn: Connection):
         average_soil_moisture(conn)
 
 
-def historical_data(conn: Connection):
+def historical_data(conn: Connection, plants_to_view: list[str], date_to_view: str):
     """Dashboard page for historical data"""
+
     st.title("LMNH Botany Department Dashboard")
     st.subheader("Historical Data")
+    s3_client = get_connection_s3()
+
+    s3_data_df = get_s3_data(s3_client, date_to_view)
+
+    st.write(s3_data_df)
+    
 
     left_col, right_col = st.columns(2)
     with left_col:
-        temperature_over_time(conn)
+        temperature_over_time(s3_data_df)
     with right_col:
-        soil_moisture_over_time(conn)
+        soil_moisture_over_time(s3_data_df)
 
-    number_of_waterings(conn)
+    number_of_waterings(s3_data_df)
 
 
 def general_stats(conn: Connection):
@@ -242,12 +272,12 @@ if __name__ == "__main__":
     # scatter_df = scatter_latest_readings(conn)
 
     plants = get_plants(conn)
-    setup_sidebar(plants)
+    plants_to_view, date_to_view = setup_sidebar(plants)
 
     if st.session_state.page == "Homepage":
-        homepage(conn)
+        homepage(conn, plants_to_view)
     elif st.session_state.page == "Historical Data":
-        historical_data(conn)
+        historical_data(conn, plants_to_view, date_to_view)
     elif st.session_state.page == "General Stats":
         general_stats(conn)
 

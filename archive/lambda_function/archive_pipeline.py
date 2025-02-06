@@ -88,6 +88,11 @@ def write_to_s3(filepath: str, s3) -> bool:
         return False
     return True
 
+def truncate_plant_status():
+    """Truncate the plant_status table"""
+    q = "TRUNCATE TABLE plant_status"
+    query_db(q, [])
+
 
 def handler(event, context):
     """lambda handler"""
@@ -97,6 +102,7 @@ def handler(event, context):
     data = get_daily_data()
     filepath = tuples_to_csv(data)
     write_to_s3(filepath, s3)
+    truncate_plant_status()
 
 
 if __name__ == "__main__":
