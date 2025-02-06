@@ -7,7 +7,7 @@ provider "aws" {
 # ECR
 
 data "aws_ecr_repository" "lambda-image-repo" {
-  name = "c15-cacareco-lambda-pipeline"
+  name = "c15-cacareco-lmnh-plants-etl"
 }
 
 data "aws_ecr_image" "lambda-image-version" {
@@ -72,6 +72,7 @@ resource "aws_lambda_function" "pipeline-lambda" {
         DB_NAME = var.DB_NAME
         DB_USER = var.DB_USER
         DB_PASSWORD = var.DB_PASSWORD
+        DB_PORT = var.DB_PORT
         }
     }
 }
