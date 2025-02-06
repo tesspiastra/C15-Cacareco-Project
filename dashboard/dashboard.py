@@ -16,15 +16,28 @@ def get_connection() -> Connection:
         database=ENV["DB_NAME"]
     )
 
-def setup_sidebar(page: str, plants: list[str]) -> tuple:
+def get_plants(conn: Connection) -> list[str]:
+    """Fetches all plants from the database."""
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT name FROM plants")
+        return [plant[0] for plant in cursor.fetchall()]
+
+def setup_sidebar(plants: list[str], page: str) -> tuple:
     """Sets up the filters in the side bar"""
     currently_viewing = st.sidebar.selectbox(
-        "Currently Viewing", ["Today", "Historical"])
+        "Currently Viewing", ["Today", "Historical, general stats"])
     
-    plant_to_view = st.sidebar.selectbox("Plant to view", plants)
-
-    general_stats = st.sidebar.button("general stats")
-
+    
+    if currently_viewing == "Today":
+        plant_to_view = st.sidebar.selectbox("Plant to view", plants)
+        return (currently_viewing, plant_to_view)
+    
+    elif currently_viewing == "Historical":
+        plant_to_view = st.sidebar.selectbox("Plant to view", plants)
+        date_to_view = st.sidebar.date_input("Date to view")
+        return (currently_viewing, plant_to_view, date_to_view)
+    elif currently_viewing == "General Stats":
+        return (currently_viewing, None)
 
 def display_temperature_and_moisture():
     """Scatter graph showing the latest temperature and moisture readings for each plant"""
@@ -67,8 +80,8 @@ def homepage(conn: Connection):
     """The default homepage of the dashboard"""
     st.title("LMNH Botany Department Dashboard")
     st.sidebar.header("Filters")
-    plants = ["cactus", "flowers", "bird of paradise"] # example for now
-    setup_sidebar(page= "homepage", plants)
+    plants = get_plants(conn)
+    setup_sidebar(plants, page= "homepage",)
     
     
     left_col, right_col = st.columns(2)
@@ -112,3 +125,4 @@ if __name__ == "__main__":
     load_dotenv()
     conn = get_connection()
     homepage(conn)
+    conn.close()
