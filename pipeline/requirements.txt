@@ -6,5 +6,9 @@ pymssql
 python-dotenv
 boto3
 aiohttp
+# asyncio
+altair
+pandas
+streamlit
 
 # Ensure asyncio is not installed when dockerising
