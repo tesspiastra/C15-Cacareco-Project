@@ -42,12 +42,12 @@ def get_s3_data(s3_client, date_to_view: str) -> pd.DataFrame:
     prefix = "historical/"
     files = list_objects(s3_client, bucket_name, prefix)
 
-    selected_date = st.sidebar.date_input("Select Date", date.today())
-
-    file_name = f"{prefix}{selected_date.day:02}_hist.csv"
+    file_name = f"{prefix}{date_to_view.day:02}_hist.csv"
     if file_name in files:
         df = read_s3_file(s3_client, bucket_name, file_name)
         return df
+    else:
+        st.write("No data available for the selected date")
 
 def display_temp_and_moisture(conn):
     """Queries the data for the most recent readings"""
@@ -116,7 +116,7 @@ def setup_sidebar(plants: list[str]) -> tuple[list[str], str]:
     elif st.session_state.page == "Historical Data":
         plants_to_view = st.sidebar.multiselect(
             "Plant to view", plants, default=plants)
-        date_to_view = st.sidebar.date_input("Date to view")
+        date_to_view = st.sidebar.date_input("Select Date", date.today())
         return plants_to_view, date_to_view
 
     elif st.session_state.page == "General Stats":
