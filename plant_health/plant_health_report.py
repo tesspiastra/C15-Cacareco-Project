@@ -65,7 +65,7 @@ def is_out_of_range(values, range_min, range_max) -> bool:
 def get_alert_data(df: pd.DataFrame):
     """Retrieves plant information marked as warning."""
 
-    water_threshold = pd.Timedelta(hours=36)
+    water_threshold = pd.Timedelta(hours=24)
     soil_moisture_safe = (20.0, 98.0)
     temperature_safe = (9.0, 30.0)
     alert_data = []
@@ -107,7 +107,7 @@ def get_alert_data(df: pd.DataFrame):
     return alert_data
 
 
-def format_alert_data(alert_data):
+def format_alert_data_html(alert_data: list[dict]):
     """Format the alert data into HTML tables with improved styling."""
 
     html_body = """
@@ -203,7 +203,44 @@ def format_alert_data(alert_data):
     return html_body
 
 
-def send_email(body, to_address):
+def format_alert_data_sms(alert_data):
+    """Format the alert data into a plain-text style message for SNS."""
+
+    sns_message = "Plant Health Alerts:\n\n"
+    sns_message += "====================\n"
+    sns_message += "Plants Needing Water\n"
+    sns_message += "====================\n"
+    sns_message += f"{'Plant Name':<30}{'Issue':<15}{'Time Since Last Watering'}\n"
+    sns_message += "-" * 70 + "\n"
+
+    for alert in alert_data:
+        if alert['issue'] == 'needs_water':
+            plant_name = alert['plant_name']
+            time_delta = alert['time_delta']
+            sns_message += f"{plant_name:<30}{
+                alert['issue']:<15}{str(time_delta)}\n"
+
+    sns_message += "\n"
+    sns_message += "====================================\n"
+    sns_message += "Plants with Soil Moisture or Temperature Alerts\n"
+    sns_message += "====================================\n"
+    sns_message += f"{'Plant Name':<30}{'Issue':<15}{
+        'Average Value':<15}{'Last 3 Values'}\n"
+    sns_message += "-" * 80 + "\n"
+
+    for alert in alert_data:
+        if alert['issue'] in ['soil_moisture', 'temperature']:
+            plant_name = alert['plant_name']
+            issue = alert['issue']
+            average_value = alert['average_value']
+            values = ', '.join([str(value) for value in alert['values']])
+            sns_message += f"{plant_name:<30}{issue:<15}{average_value:<15}{values}\n"
+
+    sns_message += "\n"
+    return sns_message
+
+
+def send_email(body: str, to_address: list[str]):
     """Sends the plant data by email using AWS SES."""
 
     ses_client = client('ses', region_name='eu-west-2')
@@ -227,7 +264,21 @@ def send_email(body, to_address):
             }
         }
     )
-    return response
+    logging.info("Plant alerts email successfully sent to recipients.")
+
+
+def send_sms(message):
+    """Send an SNS message."""
+
+    sns_client = client('sns')
+    topic_arn = 'arn:aws:sns:eu-west-2:129033205317:c15-cacareco-plant-health-alerts'
+
+    sns_client.publish(
+        TopicArn=topic_arn,
+        Message=message,
+        Subject="Plant Health Alerts"
+    )
+    logging.info("Plant alerts SMS successfully sent to topic subscribers.")
 
 
 def handler(event=None, context=None):
@@ -244,13 +295,14 @@ def handler(event=None, context=None):
         by=['plant_name', 'recording_taken'], ascending=[True, False])
     warning_data = get_alert_data(df_sorted)
 
-    body = format_alert_data(warning_data)
+    email_body = format_alert_data_html(warning_data)
+    sms_body = format_alert_data_sms(warning_data)
 
-    response = send_email(
-        body, ['trainee.zander.rackevic@sigmalabs.co.uk',
-               'trainee.benjamin.smith@sigmalabs.co.uk',
-               'trainee.tess.piastra@sigmalabs.co.uk'])
-    logging.info("SES response: %s", response)
+    send_email(
+        email_body, ['trainee.zander.rackevic@sigmalabs.co.uk',
+                     'trainee.benjamin.smith@sigmalabs.co.uk',
+                     'trainee.tess.piastra@sigmalabs.co.uk'])
+    send_sms(sms_body)
 
     return {
         'status_code': 200,
