@@ -30,6 +30,8 @@ async def extract_all_plant_data() -> dict:
         logging.info("Extracted all plant data.")
         return await asyncio.gather(*tasks)
 
+# await asyncio.gather(*tasks)
+
 
 def get_connection():
     """Makes a connection with the SQL Server database."""
@@ -69,7 +71,7 @@ def validate_temperature(temperature: float) -> float:
 
 def validate_and_transform(data: dict, conn) -> tuple:
     """Validates and transforms the API response into a format suitable for the database."""
-    plant_id = int(data.get("plant_id"))
+
     plant_id = int(data.get("plant_id"))
     recording_taken = parse_datetime(
         data.get("recording_taken"), "%Y-%m-%d %H:%M:%S")
@@ -106,8 +108,14 @@ def upload_data(conn: Connection, data: list[tuple]):
 def handler(event, context):
     load_dotenv()
     setup_logging("console")
-    loop = asyncio.get_event_loop()
-    plants = loop.run_until_complete(extract_all_plant_data())
+
+    loop = asyncio.new_event_loop()
+    # plants = loop.run_until_complete(extract_all_plant_data())
+    if loop.is_running():
+        future = asyncio.ensure_future(extract_all_plant_data())
+        plants = loop.run_until_complete(future)
+    else:
+        plants = asyncio.run(extract_all_plant_data())
 
     data = []
     conn = get_connection()
@@ -122,7 +130,7 @@ def handler(event, context):
     upload_data(conn, data)
     logging.info("Plant data successfully uploaded to database.")
     conn.close()
- 
+
+
 if __name__ == "__main__":
     handler(None, None)
-
