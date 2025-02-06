@@ -126,8 +126,3 @@ def handler(event=None, context=None):
         'status_code': 200,
         'data': json.dumps(warning_data)
     }
-
-
-if __name__ == '__main__':
-    load_dotenv()
-    handler()
