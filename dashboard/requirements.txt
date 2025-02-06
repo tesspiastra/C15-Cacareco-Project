@@ -3,3 +3,5 @@ pandas
 streamlit
 pymssql
 python-dotenv
+boto3
+wheel

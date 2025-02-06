@@ -10,3 +10,5 @@ asyncio
 altair
 pandas
 streamlit
+
+# Ensure asyncio is not installed when dockerising
