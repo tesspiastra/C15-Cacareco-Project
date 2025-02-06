@@ -5,7 +5,6 @@ import logging
 from datetime import date
 from os import environ as ENV
 import pandas as pd
-from dotenv import load_dotenv
 from boto3 import client
 
 
