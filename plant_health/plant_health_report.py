@@ -301,14 +301,12 @@ def handler(event=None, context=None):
     send_email(
         email_body, ['trainee.zander.rackevic@sigmalabs.co.uk',
                      'trainee.benjamin.smith@sigmalabs.co.uk',
-                     'trainee.tess.piastra@sigmalabs.co.uk'])
+                     'trainee.tess.piastra@sigmalabs.co.uk',
+                     'ruy.zambrano@sigmalabs.co.uk',
+                     'dan.keefe@sigmalabs.co.uk'])
     send_sms(sms_body)
 
     return {
         'status_code': 200,
         'data': json.dumps(warning_data)
     }
-
-
-if __name__ == '__main__':
-    print(handler())
