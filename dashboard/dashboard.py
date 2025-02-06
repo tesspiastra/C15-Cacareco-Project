@@ -26,6 +26,28 @@ def get_connection_s3():
                   aws_secret_access_key=ENV["SECRET_KEY"])
 
 
+def list_objects(s3_client, bucket_name: str, prefix: str) -> list[str]:
+    objects = s3_client.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
+    return [o["Key"] for o in objects.get('Contents', [])]
+
+
+def read_s3_file(s3_client, bucket_name: str, file_key: str) -> pd.DataFrame:
+    obj = s3_client.get_object(Bucket=bucket_name, Key=file_key)
+    return pd.read_csv(obj['Body'])
+
+def get_s3_data(conn: Connection, date_to_view: str) -> pd.DataFrame:
+    """Gets the data from the S3 bucket according to the date"""
+    bucket_name = ENV["S3_BUCKET"]
+    prefix = "historical/"
+    files = list_objects(s3_client, bucket_name, prefix)
+
+    selected_date = st.sidebar.date_input("Select Date", date.today())
+    
+    file_name = f"{prefix}{selected_date.day:02}_hist.csv"
+    if file_name in files:
+        df = read_s3_file(s3_client, bucket_name, file_name)
+        return df
+
 def display_temp_and_moisture(conn):
     """Queries the data for the most recent readings"""
     q = """with ranked_data as (SELECT p.plant_name, 
@@ -209,16 +231,21 @@ def homepage(conn: Connection):
         average_soil_moisture(conn)
 
 
-def historical_data(conn: Connection):
+def historical_data(conn: Connection, plants_to_view: list[str], date_to_view: str):
     """Dashboard page for historical data"""
+
     st.title("LMNH Botany Department Dashboard")
     st.subheader("Historical Data")
+    s3_client = get_connection_s3()
+
+    s3_data = get_s3_data(s3_client, date_to_view)
+    
 
     left_col, right_col = st.columns(2)
     with left_col:
-        temperature_over_time(conn)
+        temperature_over_time(conn, day_data_df)
     with right_col:
-        soil_moisture_over_time(conn)
+        soil_moisture_over_time(conn, day_data_df)
 
     number_of_waterings(conn)
 
@@ -242,12 +269,12 @@ if __name__ == "__main__":
     # scatter_df = scatter_latest_readings(conn)
 
     plants = get_plants(conn)
-    setup_sidebar(plants)
+    plants_to_view, date_to_view = setup_sidebar(plants)
 
     if st.session_state.page == "Homepage":
-        homepage(conn)
+        homepage(conn, plants_to_view)
     elif st.session_state.page == "Historical Data":
-        historical_data(conn)
+        historical_data(conn, plants_to_view, date_to_view)
     elif st.session_state.page == "General Stats":
         general_stats(conn)
 
