@@ -12,25 +12,44 @@ from dotenv import load_dotenv
 from logger_config import setup_logging
 
 
-async def get_plant_data(session, url, plant_id: int) -> dict:
-    """Fetches plant data by plant_id."""
-    async with session.get(f"{url}{plant_id}") as response:
-        return await response.json()
+# async def get_plant_data(session, url, plant_id: int) -> dict:
+#     """Fetches plant data by plant_id."""
+#     async with session.get(f"{url}{plant_id}") as response:
+#         return await response.json()
 
 
-async def extract_all_plant_data() -> dict:
-    """Fetches all plant data and stores it in a dictionary."""
+# async def extract_all_plant_data() -> dict:
+#     """Fetches all plant data and stores it in a dictionary."""
 
-    url = 'https://data-eng-plants-api.herokuapp.com/plants/'
+#     url = 'https://data-eng-plants-api.herokuapp.com/plants/'
 
-    async with aiohttp.ClientSession() as session:
-        tasks = [get_plant_data(session, url, plant_id)
-                 for plant_id in range(50)]
+#     async with aiohttp.ClientSession() as session:
+#         tasks = [get_plant_data(session, url, plant_id)
+#                  for plant_id in range(50)]
 
-        logging.info("Extracted all plant data.")
-        return await asyncio.gather(*tasks)
+#         logging.info("Extracted all plant data.")
+#         return await asyncio.gather(*tasks)
 
 # await asyncio.gather(*tasks)
+
+# Non-async method:
+
+def get_plant_data(url, plant_id: int) -> dict:
+    """Fetches plant data by plant_id."""
+    response = req.get(f'{url}{plant_id}')
+
+    return response.json()
+
+
+def extract_all_plant_data() -> dict:
+    """Fetches all plant data and stores it in a dictionary."""
+    plant_data = {}
+    url = 'https://data-eng-plants-api.herokuapp.com/plants/'
+
+    for plant_id in range(0, 26):
+        plant_data[plant_id] = get_plant_data(url, plant_id)
+
+    return plant_data
 
 
 def get_connection():
@@ -109,14 +128,14 @@ def handler(event, context):
     load_dotenv()
     setup_logging("console")
 
-    loop = asyncio.new_event_loop()
-    # plants = loop.run_until_complete(extract_all_plant_data())
-    if loop.is_running():
-        future = asyncio.ensure_future(extract_all_plant_data())
-        plants = loop.run_until_complete(future)
-    else:
-        plants = asyncio.run(extract_all_plant_data())
-
+    # loop = asyncio.new_event_loop()
+    # # plants = loop.run_until_complete(extract_all_plant_data())
+    # if loop.is_running():
+    #     future = asyncio.ensure_future(extract_all_plant_data())
+    #     plants = loop.run_until_complete(future)
+    # else:
+    #     plants = asyncio.run(extract_all_plant_data())
+    plants = extract_all_plant_data()
     data = []
     conn = get_connection()
     _ = [logging.info("Plant data %s: %s", i, plant)
