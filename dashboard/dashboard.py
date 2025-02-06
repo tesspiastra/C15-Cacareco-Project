@@ -24,7 +24,7 @@ def get_plants(conn: Connection) -> list[str]:
         return [plant[0] for plant in cursor.fetchall()]
 
 
-def setup_sidebar(plants: list[str]):
+def setup_sidebar(plants: list[str]) -> tuple[list[str], str]:
     """Sets up the filters in the sidebar and updates the selected page"""
     page_options = ["Homepage", "Historical Data", "General Stats"]
 
@@ -34,60 +34,125 @@ def setup_sidebar(plants: list[str]):
     st.session_state.page = st.sidebar.radio("Currently Viewing", page_options)
 
     if st.session_state.page == "Homepage":
-        return st.sidebar.multiselect("Plant to view", plants, default=plants)
+        plants_to_view = st.sidebar.multiselect(
+            "Plant to view", plants, default=plants)
+        return (plants_to_view, None)
 
     elif st.session_state.page == "Historical Data":
-        plant_to_view = st.sidebar.selectbox("Plant to view", plants)
+        plants_to_view = st.sidebar.multiselect(
+            "Plant to view", plants, default=plants)
         date_to_view = st.sidebar.date_input("Date to view")
-        return plant_to_view, date_to_view
+        return plants_to_view, date_to_view
 
     elif st.session_state.page == "General Stats":
-        return None
+        return None, None
 
 
-def display_temperature_and_moisture():
+def fetch_data(conn: Connection, query: str) -> pd.DataFrame:
+    """Fetches data from the database and returns it as a DataFrame"""
+    return pd.read_sql(query, conn)
+
+
+def display_temperature_and_moisture(conn: Connection):
     """Scatter graph showing the latest temperature and moisture readings for each plant"""
-    pass
+    df = fetch_data(conn, """SELECT p.plant_name, ps.temperature, ps.soil_moisture
+                            FROM plant_status AS ps
+                            JOIN plant AS p ON ps.plant_id = p.plant_id""")
+    chart = alt.Chart(df).mark_circle().encode(
+        x="temperature",
+        y="soil_moisture",
+        color="plant_name"
+    ).properties(
+        width=600,
+        height=400
+    )
+    st.altair_chart(chart)
 
 
-def display_average_temperature():
+def display_average_temperature(conn: Connection):
     """Bar chart showing average temperature per plant"""
-    pass
+    df = fetch_data(conn, """SELECT p.plant_name, AVG(ps.temperature) AS avg_temperature
+                            FROM plant_status AS ps
+                            JOIN plant AS p ON ps.plant_id = p.plant_id
+                            GROUP BY p.plant_name""")
+    chart = alt.Chart(df).mark_bar().encode(
+        x="avg_temperature",
+        y="plant_name"
+    ).properties(
+        width=600,
+        height=400
+    )
+    st.altair_chart(chart)
 
 
-def last_watered():
+def last_watered(conn: Connection):
     """Scatter plot showing last_watered time for each plant"""
-    pass
+    df = fetch_data(conn, """SELECT p.plant_name, ps.last_watered
+                            FROM plant_status AS ps
+                            JOIN plant AS p ON ps.plant_id = p.plant_id""")
+    chart = alt.Chart(df).mark_circle().encode(
+        x="last_watered",
+        y="plant_name"
+    ).properties(
+        width=600,
+        height=400
+    )
+    st.altair_chart(chart)
 
 
-def average_soil_moisture():
+def average_soil_moisture(conn: Connection):
     """Bar chart showing average soil moisture per plant"""
-    pass
+    df = fetch_data(conn, """SELECT p.plant_name, AVG(ps.soil_moisture) AS avg_soil_moisture
+                            FROM plant_status AS ps
+                            JOIN plant AS p ON ps.plant_id = p.plant_id
+                            GROUP BY p.plant_name""")
+    chart = alt.Chart(df).mark_bar().encode(
+        x="avg_soil_moisture",
+        y="plant_name"
+    ).properties(
+        width=600,
+        height=400
+    )
+    st.altair_chart(chart)
 
 
-def temperature_over_time():
+def temperature_over_time(conn: Connection):
     """Line chart showing temperature over time"""
     pass
 
-
-def soil_moisture_over_time():
+def soil_moisture_over_time(conn: Connection):
     """Line chart showing soil moisture over time"""
     pass
 
 
-def number_of_waterings():
+def number_of_waterings(conn: Connection):
     """Bar chart showing number of waterings per plant"""
     pass
 
 
-def unique_origins():
-    """Pie Chart showing unique origins of plants"""
-    pass
+def unique_origins(conn: Connection):
+    """Map showing unique origins of plants"""
+    df = fetch_data(conn, """SELECT p.plant_name, o.latitude, o.longitude
+                                FROM plant AS p
+                                JOIN origin_location AS o ON p.origin_location_id = o.origin_location_id""")
+    st.map(df)
 
 
-def botanist_attending_plants():
+def botanist_attending_plants(conn: Connection):
     """Bar chart showing number of plants each botanist is attending"""
-    pass
+    df = fetch_data(conn, """SELECT b.botanist_name, COUNT(ps.plant_id) AS num_plants
+                                FROM botanist AS b
+                                JOIN plant_status AS ps ON b.botanist_id = ps.botanist_id
+                                GROUP BY b.botanist_name;
+                                """)
+    chart = alt.Chart(df).mark_bar().encode(
+        x="num_plants",
+        y="botanist_name"
+    ).properties(
+        width=600,
+        height=400
+    )
+    st.altair_chart(chart)
 
 
 def homepage(conn: Connection):
@@ -95,11 +160,11 @@ def homepage(conn: Connection):
     st.title("LMNH Botany Department Dashboard")
     left_col, right_col = st.columns(2)
     with left_col:
-        display_temperature_and_moisture()
-        display_average_temperature()
+        display_temperature_and_moisture(conn)
+        display_average_temperature(conn)
     with right_col:
-        last_watered()
-        average_soil_moisture()
+        last_watered(conn)
+        average_soil_moisture(conn)
 
 
 def historical_data(conn: Connection):
@@ -109,11 +174,11 @@ def historical_data(conn: Connection):
 
     left_col, right_col = st.columns(2)
     with left_col:
-        temperature_over_time()
+        temperature_over_time(conn)
     with right_col:
-        soil_moisture_over_time()
+        soil_moisture_over_time(conn)
 
-    number_of_waterings()
+    number_of_waterings(conn)
 
 
 def general_stats(conn: Connection):
@@ -123,9 +188,9 @@ def general_stats(conn: Connection):
 
     left_col, right_col = st.columns(2)
     with left_col:
-        unique_origins()
+        unique_origins(conn)
     with right_col:
-        botanist_attending_plants()
+        botanist_attending_plants(conn)
 
 
 if __name__ == "__main__":
@@ -135,7 +200,6 @@ if __name__ == "__main__":
     plants = get_plants(conn)
     setup_sidebar(plants)
 
-    # Render the appropriate page based on selection
     if st.session_state.page == "Homepage":
         homepage(conn)
     elif st.session_state.page == "Historical Data":
