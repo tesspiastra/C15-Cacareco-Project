@@ -66,7 +66,7 @@ def get_alert_data(df: pd.DataFrame):
     """Retrieves plant information marked as warning."""
 
     water_threshold = pd.Timedelta(hours=36)
-    soil_moisture_safe = (20.0, 80.0)
+    soil_moisture_safe = (20.0, 98.0)
     temperature_safe = (9.0, 30.0)
     alert_data = []
 
@@ -109,7 +109,7 @@ def get_alert_data(df: pd.DataFrame):
 
 def format_alert_data(alert_data):
     """Format the alert data into HTML tables with improved styling."""
-    # Initialize the HTML body with a header
+
     html_body = """
     <style>
         table {
@@ -144,7 +144,6 @@ def format_alert_data(alert_data):
     <h2>Plant Health Alerts</h2>
     """
 
-    # Table for 'needs_water' alerts
     needs_water_table = """
     <h3>Plants Needing Water</h3>
     <table>
@@ -158,7 +157,6 @@ def format_alert_data(alert_data):
         <tbody>
     """
 
-    # Table for 'soil_moisture' and 'temperature' alerts
     other_alerts_table = """
     <h3>Plants with Soil Moisture or Temperature Alerts</h3>
     <table>
@@ -173,13 +171,11 @@ def format_alert_data(alert_data):
         <tbody>
     """
 
-    # Process each alert data
     for alert in alert_data:
         plant_name = alert['plant_name']
         issue = alert['issue']
 
         if issue == 'needs_water':
-            # Add 'needs_water' alert to its table
             time_delta = alert['time_delta']
             needs_water_table += f"""
             <tr>
@@ -189,7 +185,6 @@ def format_alert_data(alert_data):
             </tr>
             """
         elif issue in ['soil_moisture', 'temperature']:
-            # Add 'soil_moisture' or 'temperature' alert to its table
             average_value = alert['average_value']
             values = ', '.join([str(value) for value in alert['values']])
             other_alerts_table += f"""
@@ -201,13 +196,10 @@ def format_alert_data(alert_data):
             </tr>
             """
 
-    # Close the tables
     needs_water_table += "</tbody></table>"
     other_alerts_table += "</tbody></table>"
 
-    # Combine both tables
     html_body += needs_water_table + "<br>" + other_alerts_table
-
     return html_body
 
 
