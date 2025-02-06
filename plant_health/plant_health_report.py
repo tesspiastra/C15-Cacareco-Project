@@ -45,9 +45,9 @@ def download_objects(s3_client, bucket_name: str, prefix: str, objects: list[str
     plants_today = f"{prefix}{plants_file}"
     if plants_today in objects:
         s3_client.download_file(
-            bucket_name, plants_today, f"data/{plants_file}")
+            bucket_name, plants_today, f"/tmp/{plants_file}")
         logging.info("Downloaded file from s3 bucket: %s", plants_today)
-        return plants_file
+        return f"/tmp/{plants_file}"
     else:
         logging.error("No file found.")
 
@@ -88,7 +88,7 @@ def get_alert_data(df: pd.DataFrame):
                     'plant_name': plant_name,
                     'issue': 'soil_moisture',
                     'average_value': round(float(avg_soil_moisture), 2),
-                    'values': last_three_soil_moisture
+                    'values': last_three_soil_moisture.tolist()
                 })
             if is_out_of_range(last_three_temperature, *temperature_safe):
                 avg_temp = last_three_temperature.mean()
@@ -96,7 +96,7 @@ def get_alert_data(df: pd.DataFrame):
                     'plant_name': plant_name,
                     'issue': 'temperature',
                     'average_value': round(float(avg_temp), 2),
-                    'values': last_three_temperature
+                    'values': last_three_temperature.tolist()
                 })
 
     _ = [logging.warning(data) for data in alert_data]
@@ -105,8 +105,8 @@ def get_alert_data(df: pd.DataFrame):
 
 def handler(event=None, context=None):
     """AWS Lambda handler function."""
+
     setup_logging()
-    load_dotenv()
 
     bucket = "c15-cacareco-archive"
     prefix = f"{date.today().year}/{date.today().month:02}/"
@@ -114,7 +114,7 @@ def handler(event=None, context=None):
     s3 = connect_to_s3()
     content = list_objects(s3, bucket, prefix)
     plants = download_objects(s3, bucket, prefix, content)
-    df = pd.read_csv(f"data/{plants}")
+    df = pd.read_csv(plants)
     df['recording_taken'] = pd.to_datetime(df['recording_taken'])
     df['last_watered'] = pd.to_datetime(df['last_watered'])
 
@@ -129,4 +129,5 @@ def handler(event=None, context=None):
 
 
 if __name__ == '__main__':
+    load_dotenv()
     handler()
