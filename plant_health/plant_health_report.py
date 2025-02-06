@@ -48,6 +48,8 @@ def download_objects(s3_client, bucket_name: str, prefix: str, objects: list[str
             bucket_name, plants_today, f"data/{plants_file}")
         logging.info("Downloaded file from s3 bucket: %s", plants_today)
         return plants_file
+    else:
+        logging.error("No file found.")
 
 
 def is_out_of_range(values, range_min, range_max) -> bool:
