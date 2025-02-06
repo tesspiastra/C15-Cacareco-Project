@@ -2,14 +2,15 @@
 
 import json
 import logging
-from datetime import date
 from os import environ as ENV
 import pandas as pd
+from pymssql import connect, Connection
 from boto3 import client
 
 
 def setup_logging(level=20):
     """Setup the basicConfig."""
+
     log_format = "{asctime} - {levelname} - {message}"
     log_datefmt = "%Y-%m-%d %H:%M"
     logging.basicConfig(
@@ -21,34 +22,38 @@ def setup_logging(level=20):
     logging.info("Logging to console.")
 
 
-def connect_to_s3():
-    """Connects to plant archive S3."""
+def get_connection() -> Connection:
+    """Makes a connection with the SQL Server database."""
 
-    s3 = client("s3", aws_access_key_id=ENV["AWS_ACCESS_KEY"],
-                aws_secret_access_key=ENV["AWS_SECRET_ACCESS_KEY"])
-    logging.info("Successfully connected to S3.")
-    return s3
-
-
-def list_objects(s3_client, bucket_name: str, prefix: str) -> list[str]:
-    """Returns a list of object names in a specific bucket."""
-
-    objects = s3_client.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
-    return [o["Key"] for o in objects['Contents']]
+    connection = connect(
+        server=ENV["DB_HOST"],
+        port=ENV["DB_PORT"],
+        user=ENV["DB_USER"],
+        password=ENV["DB_PASSWORD"],
+        database=ENV["DB_NAME"]
+    )
+    logging.info("Established a secure connection to the database.")
+    return connection
 
 
-def download_objects(s3_client, bucket_name: str, prefix: str, objects: list[str]) -> str:
-    """Downloads objects from a bucket."""
+def get_plant_data(conn: Connection) -> list[dict]:
+    """Loads relevant data from daily RDS."""
 
-    plants_file = f"{date.today().day:02}_hist.csv"
-    plants_today = f"{prefix}{plants_file}"
-    if plants_today in objects:
-        s3_client.download_file(
-            bucket_name, plants_today, f"/tmp/{plants_file}")
-        logging.info("Downloaded file from s3 bucket: %s", plants_today)
-        return f"/tmp/{plants_file}"
-    else:
-        logging.error("No file found.")
+    query = """
+        SELECT
+            p.plant_name,
+            ps.recording_taken,
+            ps.soil_moisture,
+            ps.temperature,
+            ps.last_watered
+        FROM plant p 
+        JOIN plant_status ps ON (p.plant_id = ps.plant_id);
+    """
+    with conn.cursor(as_dict=True) as cur:
+        cur.execute(query)
+        result = cur.fetchall()
+    logging.info("Successfully loaded plant data.")
+    return result
 
 
 def is_out_of_range(values, range_min, range_max) -> bool:
@@ -87,7 +92,7 @@ def get_alert_data(df: pd.DataFrame):
                     'plant_name': plant_name,
                     'issue': 'soil_moisture',
                     'average_value': round(float(avg_soil_moisture), 2),
-                    'values': last_three_soil_moisture.tolist()
+                    'values': [round(value, 2) for value in last_three_soil_moisture]
                 })
             if is_out_of_range(last_three_temperature, *temperature_safe):
                 avg_temp = last_three_temperature.mean()
@@ -95,11 +100,36 @@ def get_alert_data(df: pd.DataFrame):
                     'plant_name': plant_name,
                     'issue': 'temperature',
                     'average_value': round(float(avg_temp), 2),
-                    'values': last_three_temperature.tolist()
+                    'values': [round(value, 2) for value in last_three_temperature]
                 })
 
     _ = [logging.warning(data) for data in alert_data]
     return alert_data
+
+
+def send_email(body, to_address):
+    """Sends the plant data by email using AWS SES."""
+
+    ses_client = client('ses', region_name='eu-west-2')
+    response = ses_client.send_email(
+        Source='trainee.zander.rackevic@sigmalabs.co.uk',
+        Destination={
+            'ToAddresses': [
+                to_address,
+            ],
+        },
+        Message={
+            'Subject': {
+                'Data': "Plant Health Alerts"
+            },
+            'Body': {
+                'Text': {
+                    'Data': json.dumps(body, indent=4)
+                }
+            }
+        }
+    )
+    return response
 
 
 def handler(event=None, context=None):
@@ -107,21 +137,24 @@ def handler(event=None, context=None):
 
     setup_logging()
 
-    bucket = "c15-cacareco-archive"
-    prefix = f"{date.today().year}/{date.today().month:02}/"
+    conn = get_connection()
+    plant_data = get_plant_data(conn)
+    conn.close()
 
-    s3 = connect_to_s3()
-    content = list_objects(s3, bucket, prefix)
-    plants = download_objects(s3, bucket, prefix, content)
-    df = pd.read_csv(plants)
-    df['recording_taken'] = pd.to_datetime(df['recording_taken'])
-    df['last_watered'] = pd.to_datetime(df['last_watered'])
-
+    df = pd.DataFrame(plant_data)
     df_sorted = df.sort_values(
         by=['plant_name', 'recording_taken'], ascending=[True, False])
     warning_data = get_alert_data(df_sorted)
+
+    response = send_email(
+        warning_data, 'trainee.zander.rackevic@sigmalabs.co.uk')
+    logging.info("SES response: %s", response)
 
     return {
         'status_code': 200,
         'data': json.dumps(warning_data)
     }
+
+
+if __name__ == '__main__':
+    print(handler())
