@@ -1,4 +1,3 @@
-ipykernel
 boto3
 pandas
 python-dotenv
