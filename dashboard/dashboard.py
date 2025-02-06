@@ -48,16 +48,23 @@ def setup_sidebar(plants: list[str]) -> tuple[list[str], str]:
         return None, None
 
 
-def fetch_data(conn: Connection, query: str) -> pd.DataFrame:
+@st.cache_data
+def fetch_data(_conn: Connection, query: str) -> pd.DataFrame:
     """Fetches data from the database and returns it as a DataFrame"""
-    return pd.read_sql(query, conn)
+    with conn.cursor(as_dict=True) as cursor:
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+    return pd.DataFrame(rows)
 
 
 def display_temperature_and_moisture(conn: Connection):
     """Scatter graph showing the latest temperature and moisture readings for each plant"""
     df = fetch_data(conn, """SELECT p.plant_name, ps.temperature, ps.soil_moisture
-                            FROM plant_status AS ps
-                            JOIN plant AS p ON ps.plant_id = p.plant_id""")
+        FROM plant_status AS ps
+        JOIN plant AS p ON ps.plant_id = p.plant_id
+        WHERE ps.recording_taken = (SELECT MAX(recording_taken) FROM plant_status WHERE plant_id = ps.plant_id);
+""")
     chart = alt.Chart(df).mark_circle().encode(
         x="temperature",
         y="soil_moisture",
