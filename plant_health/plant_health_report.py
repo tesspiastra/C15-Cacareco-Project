@@ -302,6 +302,7 @@ def handler(event=None, context=None):
         email_body, ['trainee.zander.rackevic@sigmalabs.co.uk',
                      'trainee.benjamin.smith@sigmalabs.co.uk',
                      'trainee.tess.piastra@sigmalabs.co.uk',
+                     'trainee.abdulrahman.dahir@sigmalabs.co.uk',
                      'ruy.zambrano@sigmalabs.co.uk',
                      'dan.keefe@sigmalabs.co.uk'])
     send_sms(sms_body)
