@@ -17,6 +17,7 @@ async def get_plant_data(session, url, plant_id: int) -> dict:
     async with session.get(f"{url}{plant_id}") as response:
         return await response.json()
 
+
 async def extract_all_plant_data() -> dict:
     """Fetches all plant data and stores it in a dictionary."""
 
@@ -25,7 +26,7 @@ async def extract_all_plant_data() -> dict:
     async with aiohttp.ClientSession() as session:
         tasks = [get_plant_data(session, url, plant_id)
                  for plant_id in range(50)]
-        
+
         logging.info("Extracted all plant data.")
         return await asyncio.gather(*tasks)
 
@@ -68,7 +69,7 @@ def validate_temperature(temperature: float) -> float:
 
 def validate_and_transform(data: dict, conn) -> tuple:
     """Validates and transforms the API response into a format suitable for the database."""
-    plant_id = data.get("plant_id")
+    plant_id = int(data.get("plant_id"))
     recording_taken = parse_datetime(
         data.get("recording_taken"), "%Y-%m-%d %H:%M:%S")
     soil_moisture = validate_soil_moisture(data.get("soil_moisture"))
@@ -101,7 +102,8 @@ def upload_data(conn: Connection, data: list[tuple]):
     conn.commit()
 
 
-def handler():
+def handler(event, context):
+    load_dotenv()
     setup_logging("console")
     loop = asyncio.get_event_loop()
     plants = loop.run_until_complete(extract_all_plant_data())
@@ -119,3 +121,7 @@ def handler():
     upload_data(conn, data)
     logging.info("Plant data successfully uploaded to database.")
     conn.close()
+
+
+if __name__ == "__main__":
+    handler(None, None)

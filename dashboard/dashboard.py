@@ -43,6 +43,25 @@ def average_soil_moisture():
     """Bar chart showing average soil moisture per plant"""
     pass
 
+def temperature_over_time():
+    """Line chart showing temperature over time"""
+    pass
+
+def soil_moisture_over_time():
+    """Line chart showing soil moisture over time"""
+    pass
+
+def number_of_waterings():
+    """Bar chart showing number of waterings per plant"""
+    pass
+
+def unique_origins():
+    """Pie Chart showing unique origins of plants"""
+    pass
+
+def botanist_attending_plants():
+    """Bar chart showing number of plants each botanist is attending"""
+    pass
 
 def homepage(conn: Connection):
     """The default homepage of the dashboard"""
@@ -60,12 +79,34 @@ def homepage(conn: Connection):
         last_watered()
         average_soil_moisture()
 
+def historical_data(conn: Connection):
+    """Dashboard page for historical data"""
+    st.title("LMNH Botany Department Dashboard")
+    st.subheader("Historical Data")
+
+    setup_sidebar(page= "historical_data")
+
+    left_col, right_col = st.columns(2)
+    with left_col:
+        temperature_over_time()
+    with right_col:
+        soil_moisture_over_time()
+    
+    number_of_waterings()
+
+
 def general_stats(conn: Connection):
     """Dashboard page for general stats"""
     st.title("LMNH Botany Department Dashboard")
     st.subheader("General Stats")
 
     setup_sidebar(page= "general_stats")
+    left_col, right_col = st.columns(2)
+    with left_col:
+        unique_origins()
+    with right_col:
+        botanist_attending_plants()
+
 
 if __name__ == "__main__":
     load_dotenv()
