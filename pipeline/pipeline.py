@@ -119,11 +119,10 @@ def handler(event, context):
         if transformed_entry is not None:
             data.append(transformed_entry)
             logging.info("Transformed plant data: %s", transformed_entry)
-    print('litterally anything:', {len(data)})
     upload_data(conn, data)
     logging.info("Plant data successfully uploaded to database.")
     conn.close()
-    return "Upload complete!?"
+    return "Upload complete!"
 
 
 if __name__ == "__main__":
