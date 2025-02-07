@@ -2,11 +2,14 @@
 from os import environ as ENV, path, makedirs
 import csv
 from datetime import datetime, date
+import logging
 
 from dotenv import load_dotenv
 import boto3
 from botocore.exceptions import ClientError
 import pymssql
+
+from logger_config import setup_logging
 
 
 def query_db(query: str, params: list) -> tuple:
@@ -65,6 +68,7 @@ def get_daily_data():
         """
 
     data_today = query_db(q, [])
+    logging.info("Data successfully fetched from Database")
     return data_today
 
 
@@ -75,6 +79,7 @@ def tuples_to_csv(tuple_data: list[tuple]) -> str:
     local_filepath = f"/tmp/{s3_filepath}"
     if not path.exists(directories):
         makedirs(directories)
+        logging.info("path '%s' created", directories)
     with open(local_filepath, "w") as file:
         csv_writer = csv.writer(file)
         csv_writer.writerow(("plant_id",
@@ -88,6 +93,7 @@ def tuples_to_csv(tuple_data: list[tuple]) -> str:
                              "temperature",
                              "last_watered"))
         csv_writer.writerows(tuple_data)
+        logging.info("Rows successfully written to CSV")
     return s3_filepath
 
 
@@ -98,18 +104,21 @@ def write_to_s3(filepath: str, s3) -> bool:
         response = s3.upload_file(local_path,
                                   "c15-cacareco-archive", filepath)
     except ClientError as e:
-        print(e)
+        logging.info(e)
         return False
     return True
+
 
 def truncate_plant_status():
     """Truncate the plant_status table"""
     q = "TRUNCATE TABLE plant_status"
     query_db(q, [])
+    logging.info("plant_status table truncated successfully")
 
 
 def handler(event, context):
     """lambda handler"""
+    setup_logging()
     load_dotenv()
     s3 = boto3.client("s3", aws_access_key_id=ENV["AWS_ACCESS_ID"],
                       aws_secret_access_key=ENV["AWS_ACCESS_SECRET"])
