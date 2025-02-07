@@ -6,7 +6,7 @@ import pandas as pd
 import streamlit as st
 from pymssql import Connection
 from dotenv import load_dotenv
-from datetime import date
+from datetime import date, timedelta
 
 from dash_queries import get_connection_rds, get_filters, get_latest_temp_and_moisture, get_average_temp_data, get_last_watered_data, get_avg_moisture_data, get_unique_origins, get_botanists
 from dash_graphs import temp_and_moist_chart, display_average_temperature, scatter_last_watered, average_soil_moisture, temperature_over_time, soil_moisture_over_time, number_of_waterings, botanist_attending_plants
@@ -20,6 +20,7 @@ def get_connection_s3():
 
 def list_objects(s3_client, bucket_name: str, prefix: str) -> list[str]:
     objects = s3_client.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
+    st.write([o["Key"] for o in objects.get('Contents', [])], objects.keys())
     return [o["Key"] for o in objects.get('Contents', [])]
 
 
@@ -34,7 +35,9 @@ def get_s3_data(s3_client, date_to_view: str) -> pd.DataFrame:
     prefix = "historical/"
     files = list_objects(s3_client, bucket_name, prefix)
 
-    file_name = f"{prefix}{date_to_view.day:02}_hist.csv"
+    file_name = f"""{prefix}{
+        date_to_view.year}/{date_to_view.month:02}/{date_to_view.day:02}_hist.csv"""
+    st.write(file_name)
     if file_name in files:
         df = read_s3_file(s3_client, bucket_name, file_name)
         return df
@@ -59,8 +62,10 @@ def setup_sidebar(plants: list[dict],) -> tuple[list[str], str]:
     elif st.session_state.page == "Historical Data":
 
         plant_name_list = st.sidebar.multiselect(
-            "Plants:", plants["plant_name"].unique(), default=plants["plant_name"].unique())
-        time_list = st.sidebar.date_input("Select Date", date.today())
+            "Plants:", plants, default=plants)
+
+        time_list = st.sidebar.date_input(
+            "Date to view:", value=date.today()-timedelta(days=1))
         return plant_name_list, time_list
 
 # Pages
@@ -86,7 +91,7 @@ def homepage(conn: Connection, plant_name_list: list[str]):
         average_soil_moisture(graph4_data)
 
 
-def historical_data(conn: Connection, plant_name_list: list[str], time_list: list[date]):
+def historical_data(conn: Connection, plant_name_list: list[str], time_list: list):
     """Dashboard page for historical data"""
 
     st.title("LMNH Botany Department Dashboard")
