@@ -104,7 +104,7 @@ def write_to_s3(filepath: str, s3) -> bool:
         response = s3.upload_file(local_path,
                                   "c15-cacareco-archive", filepath)
     except ClientError as e:
-        logging.info(e)
+        logging.error(e)
         return False
     return True
 
