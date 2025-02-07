@@ -27,12 +27,12 @@ def get_connection_rds() -> Connection:
     )
 
 
-def get_filters(conn, params):
+def get_filters(conn, params=None):
     """Queries the data for the attributes to filter"""
     q = """SELECT p.plant_name,ps.recording_taken 
-                        FROM plant_status AS ps
-                        JOIN plant AS p 
-                            ON ps.plant_id = p.plant_id"""
+            FROM plant_status AS ps
+            JOIN plant AS p 
+                ON ps.plant_id = p.plant_id"""
     return fetch_data(conn, q, params)
 
 
@@ -74,40 +74,48 @@ def get_last_watered_data(conn, params):
 
 def get_average_temp_data(conn: Connection, params):
     """Queries the data for the average temperatures of each plant"""
-    q = """SELECT p.plant_name, AVG(ps.temperature) AS avg_temperature
-                            FROM plant_status AS ps
-                            JOIN plant AS p ON ps.plant_id = p.plant_id
-                            GROUP BY p.plant_name
-                            WHERE plant_name = %s"""
+    q = """SELECT p.plant_name, 
+                AVG(ps.temperature) AS avg_temperature
+            FROM plant_status AS ps
+            JOIN plant AS p 
+                ON ps.plant_id = p.plant_id
+            GROUP BY p.plant_name
+            WHERE plant_name = %s"""
     return fetch_data(conn, q, params)
 
 
 def get_avg_moisture_data(conn, params):
     """Queries the data for the average soil moistures of each plant"""
-    q = """SELECT p.plant_name, AVG(ps.soil_moisture) AS avg_soil_moisture
-                            FROM plant_status AS ps
-                            JOIN plant AS p ON ps.plant_id = p.plant_id
-                            GROUP BY p.plant_name
-                            WHERE plant_name = %s"""
+    q = """SELECT p.plant_name, 
+                AVG(ps.soil_moisture) AS avg_soil_moisture
+            FROM plant_status AS ps
+            JOIN plant AS p 
+                ON ps.plant_id = p.plant_id
+            GROUP BY p.plant_name
+            WHERE plant_name = %s"""
     return fetch_data(conn, q, params)
 
 
 def get_unique_origins(conn, params):
     """Queries database for unique locations"""
-    q = """SELECT p.plant_name, o.latitude, o.longitude
-                                FROM plant AS p
-                                JOIN origin_location AS o ON p.origin_location_id = o.origin_location_id
-                            WHERE plant_name = %s"""
+    q = """SELECT p.plant_name, 
+                o.latitude, 
+                o.longitude
+            FROM plant AS p
+            JOIN origin_location AS o 
+                ON p.origin_location_id = o.origin_location_id
+            WHERE plant_name = %s"""
     return fetch_data(conn, q, params)
 
 
-def get_botanists(conn, params):
+def get_botanists(conn, params=None):
     """Retrieves all botanists"""
-    q = """SELECT b.botanist_name, COUNT(ps.plant_id) AS num_plants
-                            FROM botanist AS b
-                            JOIN plant_status AS ps ON b.botanist_id = ps.botanist_id
-                            GROUP BY b.botanist_name
-                            WHERE plant_name = %s
+    q = """SELECT b.botanist_name, 
+                COUNT(ps.plant_id) AS num_plants
+            FROM botanist AS b
+            JOIN plant_status AS ps 
+                ON b.botanist_id = ps.botanist_id
+            GROUP BY b.botanist_name
                                 """
     return fetch_data(conn, q, params)
 
@@ -115,4 +123,4 @@ def get_botanists(conn, params):
 if __name__ == "__main__":
     load_dotenv()
     conn = get_connection_rds()
-    get_filters(conn, [])
+    get_filters(conn)

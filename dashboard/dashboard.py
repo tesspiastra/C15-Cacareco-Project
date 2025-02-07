@@ -8,7 +8,7 @@ from pymssql import Connection
 from dotenv import load_dotenv
 from datetime import date
 
-from dash_queries import get_connection_rds, get_latest_temp_and_moisture, get_average_temp_data, get_last_watered_data, get_avg_moisture_data, get_unique_origins, get_botanists
+from dash_queries import get_connection_rds, get_filters, get_latest_temp_and_moisture, get_average_temp_data, get_last_watered_data, get_avg_moisture_data, get_unique_origins, get_botanists
 from dash_graphs import temp_and_moist_chart, display_average_temperature, scatter_last_watered, average_soil_moisture, temperature_over_time, soil_moisture_over_time, number_of_waterings, botanist_attending_plants
 # s3 functions
 
@@ -72,21 +72,21 @@ def homepage(conn: Connection, plant_name_list: list[str]):
     left_col, right_col = st.columns(2)
 
     with left_col:
-        graph1_data = get_latest_temp_and_moisture(conn)
+        graph1_data = get_latest_temp_and_moisture(conn, plant_name_list)
         temp_and_moist_chart(graph1_data)
 
-        graph2_data = get_average_temp_data(conn)
+        graph2_data = get_average_temp_data(conn, plant_name_list)
         display_average_temperature(graph2_data)
     with right_col:
-        graph3_data = get_last_watered_data(conn)
+        graph3_data = get_last_watered_data(conn, plant_name_list)
         # last_watered(conn)
         scatter_last_watered(graph3_data)
 
-        graph4_data = get_avg_moisture_data(conn)
+        graph4_data = get_avg_moisture_data(conn, plant_name_list)
         average_soil_moisture(graph4_data)
 
 
-def historical_data(conn: Connection, plants_to_view: list[str], time_list: list[date]):
+def historical_data(conn: Connection, plant_name_list: list[str], time_list: list[date]):
     """Dashboard page for historical data"""
 
     st.title("LMNH Botany Department Dashboard")
@@ -115,20 +115,20 @@ def general_stats(conn: Connection):
     with left_col:
         st.map(get_unique_origins(conn))
     with right_col:
-        botanist_attending_plants(conn)
+        get_botanists(conn)
 
 
 if __name__ == "__main__":
     load_dotenv()
     conn = get_connection_rds()
 
-    plants = get_plants(conn)
-    setup_sidebar(plants)
+    plants = get_filters(conn)
+    plant_name_list, time_list = setup_sidebar(plants)
 
     if st.session_state.page == "Homepage":
-        homepage(conn)
+        homepage(conn, plant_name_list)
     elif st.session_state.page == "Historical Data":
-        historical_data(conn)
+        historical_data(conn, plant_name_list, time_list)
     elif st.session_state.page == "General Stats":
         general_stats(conn)
 
