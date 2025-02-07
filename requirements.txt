@@ -1,0 +1,12 @@
+requests
+pylint
+pytest
+pyodbc
+pymssql
+python-dotenv
+boto3
+aiohttp
+asyncio
+altair
+pandas
+streamlit
