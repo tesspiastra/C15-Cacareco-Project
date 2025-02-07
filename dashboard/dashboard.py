@@ -8,7 +8,7 @@ from pymssql import Connection
 from dotenv import load_dotenv
 from datetime import date, timedelta
 
-from dash_queries import get_connection_rds, plant_names, get_latest_temp_and_moisture, get_average_temp_data, get_last_watered_data, get_avg_moisture_data, get_temp_over_time, get_moisture_over_time, get_unique_origins, get_botanists
+from dash_queries import get_connection_rds, plant_names, get_latest_temp_and_moisture, get_average_temp_data, get_last_watered_data, get_avg_moisture_data, get_unique_origins, get_botanists
 from dash_graphs import temp_and_moist_chart, display_average_temperature, scatter_last_watered, average_soil_moisture, temperature_over_time, soil_moisture_over_time, botanist_attending_plants
 # s3 functions
 
@@ -39,7 +39,7 @@ def get_s3_data(s3_client, date_to_view: str) -> pd.DataFrame:
         df = read_s3_file(s3_client, bucket_name, file_name)
         return df
     else:
-        st.write("No data available for the selected date")
+        return None
 
 
 def setup_sidebar(plants: list[str]) -> tuple[list[str], str]:
@@ -96,16 +96,22 @@ def historical_data(conn: Connection, plant_name_list: list[str], time: list):
     s3_client = get_connection_s3()
 
     s3_data_df = get_s3_data(s3_client, time)
+    if s3_data_df is not None:
+        st.write(s3_data_df)
 
-    st.write(s3_data_df)
+        filtered_df = s3_data_df[s3_data_df['plant_name'].isin(
+            plant_name_list)]
+        filtered_df = filtered_df[[
+            "recording_taken", "plant_name", "temperature"]].sort_values(by="recording_taken")
+        temperature_over_time(filtered_df)
 
-    left_col, right_col = st.columns(2)
-    with left_col:
-        graph1_data = get_temp_over_time(conn, plant_name_list, time)
-        temperature_over_time(graph1_data)
-    with right_col:
-        graph2_data = get_moisture_over_time(conn, plant_name_list, time)
-        soil_moisture_over_time(s3_data_df)
+        filtered_df_2 = s3_data_df[s3_data_df['plant_name'].isin(
+            plant_name_list)]
+        filtered_df_2 = filtered_df_2[[
+            "recording_taken", "plant_name", "soil_moisture"]].sort_values(by="recording_taken")
+        soil_moisture_over_time(filtered_df)
+    else:
+        st.write("No data available for the selected date")
 
 
 def general_stats(conn: Connection):
@@ -113,11 +119,8 @@ def general_stats(conn: Connection):
     st.title("LMNH Botany Department Dashboard")
     st.subheader("General Stats")
 
-    left_col, right_col = st.columns(2)
-    with left_col:
-        st.map(get_unique_origins(conn))
-    with right_col:
-        get_botanists(conn)
+    st.map(get_unique_origins(conn))
+    get_botanists(conn)
 
 
 if __name__ == "__main__":

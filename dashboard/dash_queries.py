@@ -141,32 +141,6 @@ def get_avg_moisture_data(_conn, params):
             WHERE plant_name IN """ + string_list + " GROUP BY plant_name"
     return fetch_data(_conn, q)
 
-# historic graphs
-
-
-@st.cache_data
-def get_temp_over_time(_conn, param1, param2):
-    """Queries database for unique locations"""
-    string_list = "('" + "', '".join(param1) + "')"
-    q = """SELECT recording_taken, 
-                AVG(temperature) as temperature,
-                plant_name
-            FROM names_and_data 
-            WHERE plant_name IN """ + string_list+" GROUP BY plant_name, recording_taken"
-    return fetch_data(_conn, q, param2)
-
-
-@st.cache_data
-def get_moisture_over_time(_conn, param1, param2):
-    """Queries database for unique locations"""
-    string_list = "('" + "', '".join(param1) + "')"
-    q = """SELECT recording_taken, 
-                AVG(soil_moisture) as soil_moisture,
-                plant_name
-            FROM names_and_data 
-            WHERE plant_name IN """ + string_list+" GROUP BY plant_name, recording_taken"
-    return fetch_data(_conn, q, param2)
-
 
 @st.cache_data
 def get_unique_origins(_conn, params):

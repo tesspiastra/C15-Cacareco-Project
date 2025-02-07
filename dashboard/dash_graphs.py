@@ -101,7 +101,7 @@ def soil_moisture_over_time(s3_data_df: pd.DataFrame):
         tooltip=[alt.Tooltip(
             "recording_taken:T", title="Recording Taken", format="%b %d %Y %H:%M:%S")]
     ).properties(
-        title="Temperature of Each Plant Over Time"
+        title="Soil Moisture of Each Plant Over Time"
     )
     return st.altair_chart(chart)
 
