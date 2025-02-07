@@ -1,6 +1,6 @@
 # Dashboard Module
 
-The `dashboard` module is responsibly for configuring and running the streamlit dashboard. The dashboard includes a number of visualisations that are relevant to the main stakeholders of the project. The module also includes the terraform responsible for building the ECS task that will host the dashboard.
+The `dashboard` module is responsible for configuring and running the streamlit dashboard. The dashboard includes a number of visualisations that are relevant to the health of the plants. The module also includes the terraform responsible for building the ECS task that will host the dashboard.
 
 ## Setup
 

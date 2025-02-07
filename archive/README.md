@@ -25,7 +25,6 @@ Files included within the module:
 3. Build terraform resources
 ```
 terraform init
-terraform plan # Preview changes
 terraform apply
 ```
 
