@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from datetime import date, timedelta
 
 from dash_queries import get_connection_rds, plant_names, get_latest_temp_and_moisture, get_average_temp_data, get_last_watered_data, get_avg_moisture_data, get_temp_over_time, get_moisture_over_time, get_unique_origins, get_botanists
-from dash_graphs import temp_and_moist_chart, display_average_temperature, scatter_last_watered, average_soil_moisture, temperature_over_time, soil_moisture_over_time, number_of_waterings, botanist_attending_plants
+from dash_graphs import temp_and_moist_chart, display_average_temperature, scatter_last_watered, average_soil_moisture, temperature_over_time, soil_moisture_over_time, botanist_attending_plants
 # s3 functions
 
 
@@ -106,8 +106,6 @@ def historical_data(conn: Connection, plant_name_list: list[str], time: list):
     with right_col:
         graph2_data = get_moisture_over_time(conn, plant_name_list, time)
         soil_moisture_over_time(s3_data_df)
-
-    number_of_waterings(s3_data_df)
 
 
 def general_stats(conn: Connection):
