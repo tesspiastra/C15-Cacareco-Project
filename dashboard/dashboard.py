@@ -8,7 +8,7 @@ from pymssql import Connection
 from dotenv import load_dotenv
 from datetime import date, timedelta
 
-from dash_queries import get_connection_rds, get_filters, get_latest_temp_and_moisture, get_average_temp_data, get_last_watered_data, get_avg_moisture_data, get_unique_origins, get_botanists
+from dash_queries import get_connection_rds, plant_names, get_latest_temp_and_moisture, get_average_temp_data, get_last_watered_data, get_avg_moisture_data, get_unique_origins, get_botanists
 from dash_graphs import temp_and_moist_chart, display_average_temperature, scatter_last_watered, average_soil_moisture, temperature_over_time, soil_moisture_over_time, number_of_waterings, botanist_attending_plants
 # s3 functions
 
@@ -57,7 +57,7 @@ def setup_sidebar(plants: list[dict],) -> tuple[list[str], str]:
     if st.session_state.page == "Homepage":
 
         plant_name_list = st.sidebar.multiselect(
-            "Plants:", plants["plant_name"].unique(), default=plants["plant_name"].unique())
+            "Plants:", plants, default=plants)
         return plant_name_list, None
     elif st.session_state.page == "Historical Data":
 
@@ -127,7 +127,7 @@ if __name__ == "__main__":
     load_dotenv()
     conn = get_connection_rds()
 
-    plants = get_filters(conn)
+    plants = plant_names()
     plant_name_list, time_list = setup_sidebar(plants)
 
     if st.session_state.page == "Homepage":

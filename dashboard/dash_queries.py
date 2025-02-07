@@ -30,8 +30,8 @@ def get_connection_rds() -> Connection:
 # convert queries to use the VIEW names_and_data
 
 
-def get_filters(conn, params=None):
-    """Queries the data for the attributes to filter"""
+def plant_names():
+    """Defines a list of plant names"""
     plant_names = [
         "Epipremnum Aureum",
         "Venus flytrap",
@@ -88,13 +88,13 @@ def get_filters(conn, params=None):
 
 def get_latest_temp_and_moisture(conn, params):
     """Queries the data for the most recent readings"""
-    q = """with ranked_data as (SELECT p.plant_name, 
-                ps.recording_taken,
-                ps.soil_moisture,
-                ps.temperature,
+    q = """with ranked_data as (SELECT plant_name, 
+                recording_taken,
+                soil_moisture,
+                temperature,
                 ROW_NUMBER() OVER(
-                    PARTITION BY p.plant_name 
-                    ORDER BY ps.recording_taken DESC) as row_num
+                    PARTITION BY plant_name 
+                    ORDER BY recording_taken DESC) as row_num
             FROM names_and_data)
             SELECT * 
             FROM ranked_data
@@ -107,9 +107,9 @@ def get_last_watered_data(conn, params):
     """Queries the data for the last time ech plant was watered"""
     q = """with lastwatered as (
             SELECT 
-                ps.last_watered, p.plant_name,ps.recording_taken,
+                last_watered, plant_name,recording_taken,
                 ROW_NUMBER() OVER(
-                    PARTITION BY p.plant_name 
+                    PARTITION BY plant_name 
                     ORDER BY recording_taken DESC) as row_num
             FROM names_and_data)
             SELECT * FROM lastwatered
@@ -120,21 +120,21 @@ def get_last_watered_data(conn, params):
 
 def get_average_temp_data(conn: Connection, params):
     """Queries the data for the average temperatures of each plant"""
-    q = """SELECT p.plant_name, 
-                AVG(ps.temperature) AS avg_temperature
+    q = """SELECT plant_name, 
+                AVG(temperature) AS avg_temperature
             FROM names_and_data
             WHERE plant_name IN (%s)
-            GROUP BY p.plant_name"""
+            GROUP BY plant_name"""
     return fetch_data(conn, q, params)
 
 
 def get_avg_moisture_data(conn, params):
     """Queries the data for the average soil moistures of each plant"""
-    q = """SELECT p.plant_name, 
-                AVG(ps.soil_moisture) AS avg_soil_moisture
+    q = """SELECT plant_name, 
+                AVG(soil_moisture) AS avg_soil_moisture
             FROM names_and_data
             WHERE plant_name IN (%s)
-            GROUP BY p.plant_name
+            GROUP BY plant_name
             """
     return fetch_data(conn, q, params)
 
@@ -176,4 +176,4 @@ def get_botanists(conn, params=None):
 if __name__ == "__main__":
     load_dotenv()
     conn = get_connection_rds()
-    get_filters(conn)
+    plants = plant_names()
