@@ -1,7 +1,7 @@
 """Handler for extracting most recent data from an RDS and uploading it to a CSV in an S3 bucket"""
 from os import environ as ENV, path, makedirs
 import csv
-from datetime import datetime, date
+from datetime import datetime
 import logging
 
 from dotenv import load_dotenv
@@ -80,7 +80,7 @@ def tuples_to_csv(tuple_data: list[tuple]) -> str:
     if not path.exists(directories):
         makedirs(directories)
         logging.info("path '%s' created", directories)
-    with open(local_filepath, "w") as file:
+    with open(local_filepath, "w", encoding='utf-8') as file:
         csv_writer = csv.writer(file)
         csv_writer.writerow(("plant_id",
                              "plant_name",
@@ -101,8 +101,8 @@ def write_to_s3(filepath: str, s3) -> bool:
     """write a csv file to an S3 bucket"""
     local_path = "/tmp/" + filepath
     try:
-        response = s3.upload_file(local_path,
-                                  "c15-cacareco-archive", filepath)
+        s3.upload_file(local_path,
+                       "c15-cacareco-archive", filepath)
     except ClientError as e:
         logging.error(e)
         return False
@@ -118,7 +118,7 @@ def truncate_plant_status():
 
 def handler(event, context):
     """lambda handler"""
-    setup_logging()
+    setup_logging("console")
     load_dotenv()
     s3 = boto3.client("s3", aws_access_key_id=ENV["AWS_ACCESS_ID"],
                       aws_secret_access_key=ENV["AWS_ACCESS_SECRET"])

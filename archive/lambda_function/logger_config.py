@@ -40,5 +40,6 @@ if __name__ == '__main__':
     #       logging.info("Here is a variable: %s", my_variable)
     #   This ensures pylint doesn't shout at us
 
-    # Use level=10 in setup_logging() when configuring (at the start of the file) to set to debug mode
+    # Use level=10 in setup_logging() when configuring
+    # (at the start of the file) to set to debug mode.
     #   Debugging requires level=10 ; logging.debug("Message goes here.")

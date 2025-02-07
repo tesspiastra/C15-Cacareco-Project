@@ -1,5 +1,5 @@
 """Tests to_csv.py"""
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from datetime import datetime
 
 import pytest
@@ -35,3 +35,5 @@ def test_tuples_to_csv(mock_open, sample_tuple_data):
     """tests correct function input and output"""
     filepath = f"{datetime.now().strftime("%Y/%m/%d")}_hist.csv"
     assert tuples_to_csv(sample_tuple_data) == filepath
+    mock_open.assert_called_once_with(
+        '/tmp/2025/02/07_hist.csv', 'w', encoding='utf-8')
