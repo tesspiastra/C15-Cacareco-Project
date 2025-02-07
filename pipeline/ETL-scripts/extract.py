@@ -15,6 +15,7 @@ def extract_all_plant_data() -> dict:
     url = 'https://data-eng-plants-api.herokuapp.com/plants/'
 
     for plant_id in range(50):
+        print("done")
         plant_data[plant_id] = get_plant_data(url, plant_id)
 
     return plant_data
