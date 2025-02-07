@@ -31,8 +31,8 @@ def get_connection_rds() -> Connection:
 
 
 def plant_names():
-    """Defines a list of plant names"""
-    plant_names = [
+    """Defines a set of plant names"""
+    plant_names = (
         "Epipremnum Aureum",
         "Venus flytrap",
         "Corpse flower",
@@ -81,7 +81,7 @@ def plant_names():
         "Zamioculcas Zamiifolia",
         "Crassula Ovata",
         "Psychopsis Papilio"
-    ]
+    )
 
     return plant_names
 
@@ -98,9 +98,9 @@ def get_latest_temp_and_moisture(conn, params):
             FROM names_and_data)
             SELECT *
             FROM ranked_data
-            WHERE row_num = 1 AND plant_name IN (%s)
+            WHERE row_num = 1 AND plant_name IN %s
             ORDER BY recording_taken DESC"""
-    return fetch_data(conn, q, [(plant,) for plant in params])
+    return fetch_data(conn, q, params)
 
 
 def get_last_watered_data(conn, params):
@@ -113,9 +113,9 @@ def get_last_watered_data(conn, params):
                     ORDER BY recording_taken DESC) as row_num
             FROM names_and_data)
             SELECT * FROM lastwatered
-            WHERE row_num = 1 AND plant_name IN (%s)
+            WHERE row_num = 1 AND plant_name IN %s
             """
-    return fetch_data(conn, q, [(plant) for plant in params])
+    return fetch_data(conn, q, params)
 
 
 def get_average_temp_data(conn: Connection, params):
@@ -123,9 +123,9 @@ def get_average_temp_data(conn: Connection, params):
     q = """SELECT plant_name, 
                 AVG(temperature) AS avg_temperature
             FROM names_and_data
-            WHERE plant_name IN (%s)
+            WHERE plant_name IN %s
             GROUP BY plant_name"""
-    return fetch_data(conn, q, [(plant) for plant in params])
+    return fetch_data(conn, q, params)
 
 
 def get_avg_moisture_data(conn, params):
@@ -133,10 +133,10 @@ def get_avg_moisture_data(conn, params):
     q = """SELECT plant_name, 
                 AVG(soil_moisture) AS avg_soil_moisture
             FROM names_and_data
-            WHERE plant_name IN (%s)
+            WHERE plant_name IN %s
             GROUP BY plant_name
             """
-    return fetch_data(conn, q, [(plant) for plant in params])
+    return fetch_data(conn, q, params)
 
 
 def get_temp_over_time(conn, params):
@@ -146,7 +146,7 @@ def get_temp_over_time(conn, params):
                 plant_name
             FROM names_and_data 
             WHERE recording_taken = %s"""
-    return fetch_data(conn, q, [(plant,) for plant in params])
+    return fetch_data(conn, q, params)
 
 
 def get_moisture_over_time(conn, params):
@@ -156,7 +156,7 @@ def get_moisture_over_time(conn, params):
                 plant_name
             FROM names_and_data 
             WHERE recording_taken = %s"""
-    return fetch_data(conn, q, [(plant) for plant in params])
+    return fetch_data(conn, q, params)
 
 
 def get_unique_origins(conn, params):
@@ -167,7 +167,7 @@ def get_unique_origins(conn, params):
             FROM plant AS p
             JOIN origin_location AS o 
                 ON p.origin_location_id = o.origin_location_id
-            WHERE plant_name IN (%s)"""
+            WHERE plant_name IN %s"""
     return fetch_data(conn, q, params)
 
 
