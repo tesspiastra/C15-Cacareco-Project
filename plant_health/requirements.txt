@@ -1,3 +1,3 @@
 pandas
-pymssql --no-binary :all:
+pymssql
 boto3

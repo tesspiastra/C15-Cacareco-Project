@@ -8,4 +8,4 @@ RUN pip install -r requirements.txt
 
 COPY plant_health_report.py .
 
-CMD ["python3", "plant_health_report.py"]
+CMD ["plant_health_report.handler"]
