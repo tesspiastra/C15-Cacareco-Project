@@ -8,7 +8,7 @@ from pymssql import Connection
 from dotenv import load_dotenv
 from datetime import date, timedelta
 
-from dash_queries import get_connection_rds, plant_names, get_latest_temp_and_moisture, get_average_temp_data, get_last_watered_data, get_avg_moisture_data, get_unique_origins, get_botanists
+from dash_queries import get_connection_rds, plant_names, get_latest_temp_and_moisture, get_average_temp_data, get_last_watered_data, get_avg_moisture_data, get_temp_over_time, get_moisture_over_time, get_unique_origins, get_botanists
 from dash_graphs import temp_and_moist_chart, display_average_temperature, scatter_last_watered, average_soil_moisture, temperature_over_time, soil_moisture_over_time, number_of_waterings, botanist_attending_plants
 # s3 functions
 
@@ -18,9 +18,8 @@ def get_connection_s3():
                   aws_secret_access_key=ENV["SECRET_KEY"])
 
 
-def list_objects(s3_client, bucket_name: str, prefix: str) -> list[str]:
-    objects = s3_client.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
-    st.write([o["Key"] for o in objects.get('Contents', [])], objects.keys())
+def list_objects(s3_client, bucket_name: str) -> list[str]:
+    objects = s3_client.list_objects_v2(Bucket=bucket_name)
     return [o["Key"] for o in objects.get('Contents', [])]
 
 
@@ -32,12 +31,10 @@ def read_s3_file(s3_client, bucket_name: str, file_key: str) -> pd.DataFrame:
 def get_s3_data(s3_client, date_to_view: str) -> pd.DataFrame:
     """Gets the data from the S3 bucket according to the date"""
     bucket_name = ENV["S3_BUCKET"]
-    prefix = "historical/"
-    files = list_objects(s3_client, bucket_name, prefix)
-
-    file_name = f"""{prefix}{
+    files = list_objects(s3_client, bucket_name)
+    file_name = f"""{
         date_to_view.year}/{date_to_view.month:02}/{date_to_view.day:02}_hist.csv"""
-    st.write(file_name)
+    st.write("Viewing File:", file_name.split('/')[-1])
     if file_name in files:
         df = read_s3_file(s3_client, bucket_name, file_name)
         return df
@@ -64,9 +61,9 @@ def setup_sidebar(plants: list[str]) -> tuple[list[str], str]:
         plant_name_list = st.sidebar.multiselect(
             "Plants:", plants, default=plants)
 
-        time_list = st.sidebar.date_input(
+        time = st.sidebar.date_input(
             "Date to view:", value=date.today()-timedelta(days=1))
-        return plant_name_list, time_list
+        return plant_name_list, time
 
 # Pages
 
@@ -91,21 +88,23 @@ def homepage(conn: Connection, plant_name_list: list[str]):
         average_soil_moisture(graph4_data)
 
 
-def historical_data(conn: Connection, plant_name_list: list[str], time_list: list):
+def historical_data(conn: Connection, plant_name_list: list[str], time: list):
     """Dashboard page for historical data"""
 
     st.title("LMNH Botany Department Dashboard")
     st.subheader("Historical Data")
     s3_client = get_connection_s3()
 
-    s3_data_df = get_s3_data(s3_client, time_list)
+    s3_data_df = get_s3_data(s3_client, time)
 
     st.write(s3_data_df)
 
     left_col, right_col = st.columns(2)
     with left_col:
-        temperature_over_time(s3_data_df)
+        graph1_data = get_temp_over_time(conn, plant_name_list, time)
+        temperature_over_time(graph1_data)
     with right_col:
+        graph2_data = get_moisture_over_time(conn, plant_name_list, time)
         soil_moisture_over_time(s3_data_df)
 
     number_of_waterings(s3_data_df)
@@ -128,12 +127,12 @@ if __name__ == "__main__":
     conn = get_connection_rds()
 
     plants = plant_names()
-    plant_name_list, time_list = setup_sidebar(plants)
+    plant_name_list, time = setup_sidebar(plants)
 
     if st.session_state.page == "Homepage":
         homepage(conn, plant_name_list)
     elif st.session_state.page == "Historical Data":
-        historical_data(conn, plant_name_list, time_list)
+        historical_data(conn, plant_name_list, time)
     elif st.session_state.page == "General Stats":
         general_stats(conn)
 
