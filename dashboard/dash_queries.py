@@ -100,7 +100,7 @@ def get_latest_temp_and_moisture(conn, params):
             FROM ranked_data
             WHERE row_num = 1 AND plant_name IN (%s)
             ORDER BY recording_taken DESC"""
-    return fetch_data(conn, q, [(plant,) for plant in params])
+    return fetch_data(conn, q, params)
 
 
 def get_last_watered_data(conn, params):
@@ -115,7 +115,7 @@ def get_last_watered_data(conn, params):
             SELECT * FROM lastwatered
             WHERE row_num = 1 AND plant_name IN (%s)
             """
-    return fetch_data(conn, q, [(plant) for plant in params])
+    return fetch_data(conn, q, params)
 
 
 def get_average_temp_data(conn: Connection, params):
@@ -125,7 +125,7 @@ def get_average_temp_data(conn: Connection, params):
             FROM names_and_data
             WHERE plant_name IN (%s)
             GROUP BY plant_name"""
-    return fetch_data(conn, q, [(plant) for plant in params])
+    return fetch_data(conn, q, params)
 
 
 def get_avg_moisture_data(conn, params):
@@ -136,7 +136,7 @@ def get_avg_moisture_data(conn, params):
             WHERE plant_name IN (%s)
             GROUP BY plant_name
             """
-    return fetch_data(conn, q, [(plant) for plant in params])
+    return fetch_data(conn, q, params)
 
 
 def get_temp_over_time(conn, params):
@@ -146,17 +146,7 @@ def get_temp_over_time(conn, params):
                 plant_name
             FROM names_and_data 
             WHERE recording_taken = %s"""
-    return fetch_data(conn, q, [(plant,) for plant in params])
-
-
-def get_moisture_over_time(conn, params):
-    """Queries database for unique locations"""
-    q = """SELECT recording_taken, 
-                soil_moisture,
-                plant_name
-            FROM names_and_data 
-            WHERE recording_taken = %s"""
-    return fetch_data(conn, q, [(plant) for plant in params])
+    return fetch_data(conn, q, params)
 
 
 def get_unique_origins(conn, params):
