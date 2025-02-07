@@ -149,16 +149,6 @@ def get_temp_over_time(conn, params):
     return fetch_data(conn, q, params)
 
 
-def get_moisture_over_time(conn, params):
-    """Queries database for unique locations"""
-    q = """SELECT recording_taken, 
-                soil_moisture,
-                plant_name
-            FROM names_and_data 
-            WHERE recording_taken = %s"""
-    return fetch_data(conn, q, params)
-
-
 def get_unique_origins(conn, params):
     """Queries database for unique locations"""
     q = """SELECT p.plant_name, 
