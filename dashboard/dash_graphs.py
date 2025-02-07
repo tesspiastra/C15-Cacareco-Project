@@ -92,17 +92,13 @@ def average_soil_moisture(df):
 
 def temperature_over_time(s3_data_df: pd.DataFrame):
     """Line chart showing temperature over time"""
-    pass
+    chart = alt.Chart(s3_data_df).mark_line().encode
 
 
 def soil_moisture_over_time(s3_data_df: pd.DataFrame):
     """Line chart showing soil moisture over time"""
     pass
 
-
-def number_of_waterings(s3_data_df: pd.DataFrame):
-    """Bar chart showing number of waterings per plant"""
-    pass
 
 # General stats page graphs
 
