@@ -34,9 +34,13 @@ data "aws_iam_policy_document" "lambda-role-permissions-policy-doc" {
     actions = [ 
         "logs:CreateLogGroup",
         "logs:CreateLogStream",
-        "logs:PutLogEvents" 
+        "logs:PutLogEvents",
+        "ses:SendEmail",
+        "sns:Publish"
     ]
-    resources = [ "arn:aws:logs:eu-west-2:129033205317:*" ]
+    resources = ["arn:aws:logs:eu-west-2:129033205317:*",
+                "arn:aws:ses:eu-west-2:129033205317:identity/*",
+                "arn:aws:sns:eu-west-2:129033205317:c15-cacareco-plant-health-alerts" ]
   }
 }
 
