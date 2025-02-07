@@ -7,10 +7,10 @@ from pymssql import connect, Connection
 from dotenv import load_dotenv
 
 
-@st.cache_data
-def fetch_data(_conn: Connection, query: str, params: list[int]) -> pd.DataFrame:
+def fetch_data(conn: Connection, query: str, params=None) -> pd.DataFrame:
     """Fetches data from the database and returns it as a DataFrame"""
-    with _conn.cursor(as_dict=True) as cursor:
+    print(query)
+    with conn.cursor(as_dict=True) as cursor:
         cursor.execute(query, params)
         rows = cursor.fetchall()
     return pd.DataFrame(rows)
@@ -26,101 +26,164 @@ def get_connection_rds() -> Connection:
         database=ENV["DB_NAME"]
     )
 
+
 # convert queries to use the VIEW names_and_data
 
 
-def get_filters(conn, params=None):
-    """Queries the data for the attributes to filter"""
-    q = """SELECT p.plant_name,ps.recording_taken 
-            FROM plant_status AS ps
-            JOIN plant AS p 
-                ON ps.plant_id = p.plant_id"""
-    return fetch_data(conn, q, params)
+def plant_names():
+    """Defines a set of plant names"""
+    plant_names = (
+        "Epipremnum Aureum",
+        "Venus flytrap",
+        "Corpse flower",
+        "Rafflesia arnoldii",
+        "Black bat flower",
+        "Pitcher plant",
+        "Wollemi pine",
+        "Bird of paradise",
+        "Cactus",
+        "Dragon tree,",
+        "Asclepias Curassavica",
+        "Brugmansia X Candida",
+        "Canna ‘Striata’",
+        "Colocasia Esculenta",
+        "Cuphea ‘David Verity’",
+        "Euphorbia Cotinifolia",
+        "Ipomoea Batatas",
+        "Manihot Esculenta ‘Variegata’",
+        "Musa Basjoo",
+        "Salvia Splendens",
+        "Anthurium",
+        "Bird of Paradise",
+        "Cordyline Fruticosa",
+        "Ficus",
+        "Palm Trees",
+        "Dieffenbachia Seguine",
+        "Spathiphyllum",
+        "Croton",
+        "Aloe Vera",
+        "Ficus Elastica",
+        "Sansevieria Trifasciata",
+        "Philodendron Hederaceum",
+        "Schefflera Arboricola",
+        "Aglaonema Commutatum",
+        "Monstera Deliciosa",
+        "Tacca Integrifolia",
+        "Saintpaulia Ionantha",
+        "Gaillardia",
+        "Amaryllis",
+        "Caladium Bicolor",
+        "Chlorophytum Comosum",
+        "Araucaria Heterophylla",
+        "Begonia",
+        "Medinilla Magnifica",
+        "Calliandra Haematocephala",
+        "Zamioculcas Zamiifolia",
+        "Crassula Ovata",
+        "Psychopsis Papilio"
+    )
+
+    return plant_names
 
 
-def get_latest_temp_and_moisture(conn, params):
+@st.cache_data
+def get_latest_temp_and_moisture(_conn, params):
     """Queries the data for the most recent readings"""
-    q = """with ranked_data as (SELECT p.plant_name, 
-                ps.recording_taken,
-                ps.soil_moisture,
-                ps.temperature,
+    string_list = "('" + "', '".join(params) + "')"
+    q = """with ranked_data as (SELECT plant_name,
+                recording_taken,
+                soil_moisture,
+                temperature,
                 ROW_NUMBER() OVER(
-                    PARTITION BY p.plant_name 
-                    ORDER BY ps.recording_taken DESC) as row_num
-            FROM plant as p
-            JOIN plant_status as ps
-                ON p.plant_id = ps.plant_id)
-            SELECT * 
+                    PARTITION BY plant_name
+                    ORDER BY recording_taken DESC) as row_num
+            FROM names_and_data)
+            SELECT *
             FROM ranked_data
-            WHERE row_num = 1 AND plant_name = %s
-            ORDER BY recording_taken DESC"""
-    return fetch_data(conn, q, params)
+            WHERE row_num = 1 AND plant_name IN """ + string_list + " ORDER BY recording_taken DESC"
+    return fetch_data(_conn, q)
 
 
-def get_last_watered_data(conn, params):
+@st.cache_data
+def get_last_watered_data(_conn, params):
     """Queries the data for the last time ech plant was watered"""
+    string_list = "('" + "', '".join(params) + "')"
     q = """with lastwatered as (
             SELECT 
-                ps.last_watered, p.plant_name,ps.recording_taken,
+                last_watered, plant_name,recording_taken,
                 ROW_NUMBER() OVER(
-                    PARTITION BY p.plant_name 
+                    PARTITION BY plant_name 
                     ORDER BY recording_taken DESC) as row_num
-            FROM plant_status AS ps 
-            JOIN plant AS p 
-                ON p.plant_id = ps.plant_id)
+            FROM names_and_data)
             SELECT * FROM lastwatered
-            WHERE row_num = 1 AND plant_name = %s
-            """
-    return fetch_data(conn, q, params)
+            WHERE row_num = 1 AND plant_name IN """ + string_list
+    return fetch_data(_conn, q)
 
 
-def get_average_temp_data(conn: Connection, params):
+@st.cache_data
+def get_average_temp_data(_conn: Connection, params):
     """Queries the data for the average temperatures of each plant"""
-    q = """SELECT p.plant_name, 
-                AVG(ps.temperature) AS avg_temperature
-            FROM plant_status AS ps
-            JOIN plant AS p 
-                ON ps.plant_id = p.plant_id
-            GROUP BY p.plant_name
-            WHERE plant_name = %s"""
-    return fetch_data(conn, q, params)
+    string_list = "('" + "', '".join(params) + "')"
+    q = """SELECT plant_name, 
+                AVG(temperature) AS avg_temperature
+            FROM names_and_data
+            WHERE plant_name IN """ + string_list + " GROUP BY plant_name"
+    return fetch_data(_conn, q)
 
 
-def get_avg_moisture_data(conn, params):
+@st.cache_data
+def get_avg_moisture_data(_conn, params):
     """Queries the data for the average soil moistures of each plant"""
-    q = """SELECT p.plant_name, 
-                AVG(ps.soil_moisture) AS avg_soil_moisture
-            FROM plant_status AS ps
-            JOIN plant AS p 
-                ON ps.plant_id = p.plant_id
-            GROUP BY p.plant_name
-            WHERE plant_name = %s"""
-    return fetch_data(conn, q, params)
+    string_list = "('" + "', '".join(params) + "')"
+    q = """SELECT plant_name, 
+                AVG(soil_moisture) AS avg_soil_moisture
+            FROM names_and_data
+            WHERE plant_name IN """ + string_list + " GROUP BY plant_name"
+    return fetch_data(_conn, q)
+
+# historic graphs
 
 
-def get_temp_over_time(conn, params):
+@st.cache_data
+def get_temp_over_time(_conn, param1, param2):
     """Queries database for unique locations"""
+    string_list = "('" + "', '".join(param1) + "')"
     q = """SELECT recording_taken, 
-                temperature,
+                AVG(temperature) as temperature,
                 plant_name
             FROM names_and_data 
-            WHERE recording_taken = %s"""
-    return fetch_data(conn, q, params)
+            WHERE plant_name IN """ + string_list+" GROUP BY plant_name, recording_taken"
+    return fetch_data(_conn, q, param2)
 
 
-def get_unique_origins(conn, params):
+@st.cache_data
+def get_moisture_over_time(_conn, param1, param2):
     """Queries database for unique locations"""
+    string_list = "('" + "', '".join(param1) + "')"
+    q = """SELECT recording_taken, 
+                AVG(soil_moisture) as soil_moisture,
+                plant_name
+            FROM names_and_data 
+            WHERE plant_name IN """ + string_list+" GROUP BY plant_name, recording_taken"
+    return fetch_data(_conn, q, param2)
+
+
+@st.cache_data
+def get_unique_origins(_conn, params):
+    """Queries database for unique locations"""
+    string_list = "('" + "', '".join(params) + "')"
     q = """SELECT p.plant_name, 
                 o.latitude, 
                 o.longitude
             FROM plant AS p
             JOIN origin_location AS o 
                 ON p.origin_location_id = o.origin_location_id
-            WHERE plant_name = %s"""
-    return fetch_data(conn, q, params)
+            WHERE plant_name IN """ + string_list
+    return fetch_data(_conn, q)
 
 
-def get_botanists(conn, params=None):
+@st.cache_data
+def get_botanists(_conn, params=None):
     """Retrieves all botanists"""
     q = """SELECT b.botanist_name, 
                 COUNT(ps.plant_id) AS num_plants
@@ -129,10 +192,10 @@ def get_botanists(conn, params=None):
                 ON b.botanist_id = ps.botanist_id
             GROUP BY b.botanist_name
                                 """
-    return fetch_data(conn, q, params)
+    return fetch_data(_conn, q, params)
 
 
 if __name__ == "__main__":
     load_dotenv()
     conn = get_connection_rds()
-    get_filters(conn)
+    plants = plant_names()
