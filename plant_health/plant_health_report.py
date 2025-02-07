@@ -145,7 +145,7 @@ def format_alert_data_html(alert_data: list[dict]):
     """
 
     needs_water_table = """
-    <h3>Plants Needing Water</h3>
+    <h3>Plants not Watered in the last 24 hours</h3>
     <table>
         <thead>
             <tr>
