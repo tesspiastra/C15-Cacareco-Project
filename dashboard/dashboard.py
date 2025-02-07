@@ -45,7 +45,7 @@ def get_s3_data(s3_client, date_to_view: str) -> pd.DataFrame:
         st.write("No data available for the selected date")
 
 
-def setup_sidebar(plants: list[dict],) -> tuple[list[str], str]:
+def setup_sidebar(plants: list[str]) -> tuple[list[str], str]:
     """Sets up the filters in the sidebar and updates the selected page"""
     page_options = ["Homepage", "Historical Data", "General Stats"]
 

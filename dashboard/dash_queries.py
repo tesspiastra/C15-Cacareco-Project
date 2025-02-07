@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 def fetch_data(_conn: Connection, query: str, params) -> pd.DataFrame:
     """Fetches data from the database and returns it as a DataFrame"""
     with _conn.cursor(as_dict=True) as cursor:
-        cursor.executemany(query, params)
+        cursor.execute(query, params)
         rows = cursor.fetchall()
     return pd.DataFrame(rows)
 
@@ -88,15 +88,15 @@ def plant_names():
 
 def get_latest_temp_and_moisture(conn, params):
     """Queries the data for the most recent readings"""
-    q = """with ranked_data as (SELECT plant_name, 
+    q = """with ranked_data as (SELECT plant_name,
                 recording_taken,
                 soil_moisture,
                 temperature,
                 ROW_NUMBER() OVER(
-                    PARTITION BY plant_name 
+                    PARTITION BY plant_name
                     ORDER BY recording_taken DESC) as row_num
             FROM names_and_data)
-            SELECT * 
+            SELECT *
             FROM ranked_data
             WHERE row_num = 1 AND plant_name IN (%s)
             ORDER BY recording_taken DESC"""
@@ -115,7 +115,7 @@ def get_last_watered_data(conn, params):
             SELECT * FROM lastwatered
             WHERE row_num = 1 AND plant_name IN (%s)
             """
-    return fetch_data(conn, q, [(plant,) for plant in params])
+    return fetch_data(conn, q, [(plant) for plant in params])
 
 
 def get_average_temp_data(conn: Connection, params):
@@ -125,7 +125,7 @@ def get_average_temp_data(conn: Connection, params):
             FROM names_and_data
             WHERE plant_name IN (%s)
             GROUP BY plant_name"""
-    return fetch_data(conn, q, [(plant,) for plant in params])
+    return fetch_data(conn, q, [(plant) for plant in params])
 
 
 def get_avg_moisture_data(conn, params):
@@ -136,7 +136,7 @@ def get_avg_moisture_data(conn, params):
             WHERE plant_name IN (%s)
             GROUP BY plant_name
             """
-    return fetch_data(conn, q, [(plant,) for plant in params])
+    return fetch_data(conn, q, [(plant) for plant in params])
 
 
 def get_temp_over_time(conn, params):
@@ -156,7 +156,7 @@ def get_moisture_over_time(conn, params):
                 plant_name
             FROM names_and_data 
             WHERE recording_taken = %s"""
-    return fetch_data(conn, q, [(plant,) for plant in params])
+    return fetch_data(conn, q, [(plant) for plant in params])
 
 
 def get_unique_origins(conn, params):

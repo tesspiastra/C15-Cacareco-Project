@@ -13,7 +13,7 @@ from dash_queries import fetch_data, get_connection_rds
 
 def temp_and_moist_chart(df):
     base = alt.Chart(df).encode(
-        alt.X("plant_name", title="Plant Name")
+        alt.X("plant_name:N", title="Plant Name")
     )
     scatter_1 = base.mark_point(color="blueviolet").encode(
         alt.Y("soil_moisture:Q", title="Soil Moisture"),
