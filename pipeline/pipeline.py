@@ -2,8 +2,8 @@
 from os import environ as ENV
 from datetime import datetime
 import asyncio
-# Installed
 import logging
+# Installed
 import requests as req
 import aiohttp
 from pymssql import connect, Connection
@@ -31,7 +31,7 @@ async def extract_all_plant_data() -> list:
         logging.info("Extracted all plant data.")
         plants = await asyncio.gather(*tasks)
         return plants
-    
+
 
 def get_connection():
     """Makes a connection with the SQL Server database."""
@@ -109,7 +109,7 @@ def handler(event, context):
     load_dotenv()
     setup_logging("console")
     plants = asyncio.run(extract_all_plant_data())
-    
+
     data = []
     conn = get_connection()
     _ = [logging.info("Plant data %s: %s", i, plant)
@@ -119,12 +119,11 @@ def handler(event, context):
         if transformed_entry is not None:
             data.append(transformed_entry)
             logging.info("Transformed plant data: %s", transformed_entry)
-    print('litterally anything:',{len(data)})
     upload_data(conn, data)
     logging.info("Plant data successfully uploaded to database.")
     conn.close()
-    return "Upload complete!?"
- 
+    return "Upload complete!"
+
+
 if __name__ == "__main__":
     handler(None, None)
-
