@@ -1,10 +1,10 @@
 # Built-in
 from os import environ as ENV
 from datetime import datetime
+import asyncio
 # Installed
 import logging
 import requests as req
-import asyncio
 import aiohttp
 from pymssql import connect, Connection
 from dotenv import load_dotenv
@@ -14,22 +14,24 @@ from logger_config import setup_logging
 
 async def get_plant_data(session, url, plant_id: int) -> dict:
     """Fetches plant data by plant_id."""
-    async with session.get(f"{url}{plant_id}") as response:
-        return await response.json()
+    print(url, plant_id)
+    response = await session.get(url + str(plant_id))
+    plant = await response.json()
+    return plant
 
 
-async def extract_all_plant_data() -> dict:
-    """Fetches all plant data and stores it in a dictionary."""
+async def extract_all_plant_data() -> list:
+    """Fetches all plant data and stores it in a list."""
 
     url = 'https://data-eng-plants-api.herokuapp.com/plants/'
 
     async with aiohttp.ClientSession() as session:
         tasks = [get_plant_data(session, url, plant_id)
                  for plant_id in range(50)]
-
         logging.info("Extracted all plant data.")
-        return await asyncio.gather(*tasks)
-
+        plants = await asyncio.gather(*tasks)
+        return plants
+    
 
 def get_connection():
     """Makes a connection with the SQL Server database."""
@@ -106,9 +108,8 @@ def upload_data(conn: Connection, data: list[tuple]):
 def handler(event, context):
     load_dotenv()
     setup_logging("console")
-    loop = asyncio.get_event_loop()
-    plants = loop.run_until_complete(extract_all_plant_data())
-
+    plants = asyncio.run(extract_all_plant_data())
+    
     data = []
     conn = get_connection()
     _ = [logging.info("Plant data %s: %s", i, plant)
@@ -118,10 +119,11 @@ def handler(event, context):
         if transformed_entry is not None:
             data.append(transformed_entry)
             logging.info("Transformed plant data: %s", transformed_entry)
-
+    print('litterally anything:',{len(data)})
     upload_data(conn, data)
     logging.info("Plant data successfully uploaded to database.")
     conn.close()
+    return "Upload complete!?"
  
 if __name__ == "__main__":
     handler(None, None)

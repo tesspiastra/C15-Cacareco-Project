@@ -1,5 +1,5 @@
 """Handler for extracting most recent data from an RDS and uploading it to a CSV in an S3 bucket"""
-from os import environ, path, makedirs
+from os import environ as ENV, path, makedirs
 import csv
 from datetime import datetime, date
 
@@ -11,17 +11,17 @@ import pymssql
 
 def query_db(query: str, params: list) -> tuple:
     """Query a MS SQL Server Database"""
-    conn = pymssql.connect(environ["DB_HOST"],
-                           environ["DB_USER"],
-                           environ["DB_PASSWORD"],
-                           environ["DB_NAME"])
+    conn = pymssql.connect(ENV["DB_HOST"],
+                           ENV["DB_USER"],
+                           ENV["DB_PASSWORD"],
+                           ENV["DB_NAME"])
     cursor = conn.cursor()
 
     q = f"""
         ALTER USER
-            {environ["DB_USER"]}
+            {ENV["DB_USER"]}
         WITH
-            DEFAULT_SCHEMA = {environ["SCHEMA_NAME"]}
+            DEFAULT_SCHEMA = {ENV["SCHEMA_NAME"]}
         """
     cursor.execute(q)
 
@@ -34,20 +34,34 @@ def get_daily_data():
     """get today's data from the RDS"""
     q = """
         SELECT 
-            plant_id, plant_name, botanist_name, city_name, time_zone, country_code, recording_taken, soil_moisture, temperature, last_watered
+            p.plant_id, 
+            p.plant_name, 
+            b.botanist_name, 
+            c.city_name, 
+            c.time_zone, 
+            co.country_code, 
+            ps.recording_taken, 
+            ps.soil_moisture, 
+            ps.temperature, 
+            ps.last_watered
         FROM 
-            plant_status
-        JOIN plant ON (plant_status.plant_id = plant.plant_id)
-        JOIN botanist ON (plant_status.botanist_id = botanist.botanist_id) 
-        JOIN origin_location ON (origin_location.origin_location_id = plant.origin_location_id)
-        JOIN city ON (city.city_id = origin_location.city_id)
-        JOIN country ON (country.country_id = city.country_id)
+            plant_status AS ps
+        JOIN plant AS p 
+            ON (ps.plant_id = p.plant_id)
+        JOIN botanist AS b 
+            ON (ps.botanist_id = b.botanist_id) 
+        JOIN origin_location as ol
+            ON (p.origin_location_id = ol.origin_location_id)
+        JOIN city AS c 
+            ON (c.city_id = ol.city_id)
+        JOIN country AS co 
+            ON (co.country_id = c.country_id)
         WHERE 
-            DATENAME(year, recording_taken) = DATENAME(year, CURRENT_TIMESTAMP)
+            DATENAME(year, ps.recording_taken) = DATENAME(year, CURRENT_TIMESTAMP)
             AND 
-            DATENAME(month, recording_taken) = DATENAME(month, CURRENT_TIMESTAMP)
+            DATENAME(month, ps.recording_taken) = DATENAME(month, CURRENT_TIMESTAMP)
             AND
-            DATENAME(day, recording_taken) = DATENAME(day, CURRENT_TIMESTAMP);
+            DATENAME(day, ps.recording_taken) = DATENAME(day, CURRENT_TIMESTAMP);
         """
 
     data_today = query_db(q, [])
@@ -96,9 +110,9 @@ def truncate_plant_status():
 
 def handler(event, context):
     """lambda handler"""
-    s3 = boto3.client("s3", aws_access_key_id=environ["AWS_ACCESS_ID"],
-                      aws_secret_access_key=environ["AWS_ACCESS_SECRET"])
     load_dotenv()
+    s3 = boto3.client("s3", aws_access_key_id=ENV["AWS_ACCESS_ID"],
+                      aws_secret_access_key=ENV["AWS_ACCESS_SECRET"])
     data = get_daily_data()
     filepath = tuples_to_csv(data)
     write_to_s3(filepath, s3)
