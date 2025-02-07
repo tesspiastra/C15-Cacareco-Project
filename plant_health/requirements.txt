@@ -1,0 +1,3 @@
+pandas
+pymssql
+boto3
