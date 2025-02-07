@@ -26,6 +26,8 @@ def get_connection_rds() -> Connection:
         database=ENV["DB_NAME"]
     )
 
+# convert queries to use the VIEW names_and_data
+
 
 def get_filters(conn, params=None):
     """Queries the data for the attributes to filter"""
@@ -93,6 +95,16 @@ def get_avg_moisture_data(conn, params):
                 ON ps.plant_id = p.plant_id
             GROUP BY p.plant_name
             WHERE plant_name = %s"""
+    return fetch_data(conn, q, params)
+
+
+def get_temp_over_time(conn, params):
+    """Queries database for unique locations"""
+    q = """SELECT recording_taken, 
+                temperature,
+                plant_name
+            FROM names_and_data 
+            WHERE recording_taken = %s"""
     return fetch_data(conn, q, params)
 
 

@@ -37,18 +37,6 @@ def temp_and_moist_chart(df):
     return st.altair_chart(chart)
 
 
-def display_average_temperature(df):
-    """Bar chart showing average temperature per plant"""
-    chart = alt.Chart(df).mark_bar().encode(
-        x="avg_temperature",
-        y="plant_name"
-    ).properties(
-        width=600,
-        height=400
-    )
-    st.altair_chart(chart)
-
-
 def scatter_last_watered(df):
     """Displays chart for the most recent watered times, for each plant"""
     chart = alt.Chart(df).mark_point().encode(
@@ -63,6 +51,16 @@ def scatter_last_watered(df):
     return st.altair_chart(chart)
 
 
+def display_average_temperature(df):
+    """Bar chart showing average temperature per plant"""
+    chart = alt.Chart(df).mark_bar().encode(
+        x="avg_temperature",
+        y="plant_name"
+    ).properties(
+        width=600,
+        height=400
+    )
+    st.altair_chart(chart)
 # def last_watered(conn: Connection):
 #     """Scatter plot showing last_watered time for each plant"""
 #     df = fetch_data(conn, """SELECT p.plant_name, ps.last_watered
